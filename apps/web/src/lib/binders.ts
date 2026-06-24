@@ -27,18 +27,9 @@ export type BinderDetail = BinderSummary & {
   slots: BinderSlot[];
 };
 
-export type SearchCard = {
-  externalId: string;
-  name: string;
-  imageUrl: string | null;
-  setId: string;
-  localId: string;
-};
+import type { SearchCard, SearchResponse } from "@/lib/cards";
 
-export type SearchResponse = {
-  data: SearchCard[];
-  pagination: { page: number; limit: number; total: number };
-};
+export type { SearchCard, SearchResponse };
 
 export function layoutLabel(layout: BinderLayout): string {
   return layout.replace("GRID_", "").replace("X", "×");

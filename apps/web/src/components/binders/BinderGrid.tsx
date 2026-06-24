@@ -8,9 +8,20 @@ type BinderGridProps = {
   slots: BinderSlot[];
   cardSize?: CardSizeLevel;
   onSlotSelect: (slot: BinderSlot) => void;
+  onSlotReplace: (slot: BinderSlot) => void;
+  onSlotToggleOwned: (slot: BinderSlot) => void;
+  onSlotClear: (slot: BinderSlot) => void;
 };
 
-export function BinderGrid({ layout, slots, cardSize = 3, onSlotSelect }: BinderGridProps) {
+export function BinderGrid({
+  layout,
+  slots,
+  cardSize = 3,
+  onSlotSelect,
+  onSlotReplace,
+  onSlotToggleOwned,
+  onSlotClear,
+}: BinderGridProps) {
   const { cols } = gridDimensions(layout);
 
   return (
@@ -19,7 +30,14 @@ export function BinderGrid({ layout, slots, cardSize = 3, onSlotSelect }: Binder
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {slots.map((slot) => (
-        <CardSlot key={`${slot.pageIndex}-${slot.row}-${slot.col}`} slot={slot} onSelect={() => onSlotSelect(slot)} />
+        <CardSlot
+          key={`${slot.pageIndex}-${slot.row}-${slot.col}`}
+          slot={slot}
+          onSelect={() => onSlotSelect(slot)}
+          onReplace={() => onSlotReplace(slot)}
+          onToggleOwned={() => onSlotToggleOwned(slot)}
+          onClear={() => onSlotClear(slot)}
+        />
       ))}
     </div>
   );

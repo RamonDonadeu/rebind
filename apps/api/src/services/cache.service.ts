@@ -4,21 +4,35 @@ import type { FastifyBaseLogger } from "fastify";
 
 const SEARCH_TTL_SECONDS = 60 * 60;
 const CARD_TTL_SECONDS = 60 * 60 * 24;
+const SETS_TTL_SECONDS = 60 * 60 * 24;
 
 let client: RedisClientType | null = null;
 let cacheEnabled = false;
 
-export function searchCacheKey(params: {
-  q: string;
+export type SearchCacheParams = {
+  q?: string;
   set?: string;
+  rarity?: string;
+  sort?: string;
+  order?: string;
   page: number;
   limit: number;
-}): string {
+};
+
+export function searchCacheKey(params: SearchCacheParams): string {
   const hash = createHash("sha256")
     .update(JSON.stringify(params))
     .digest("hex");
 
   return `tcgdex:search:${hash}`;
+}
+
+export function setsCacheKey(): string {
+  return "tcgdex:sets:all";
+}
+
+export function getSetsCacheTtl(): number {
+  return SETS_TTL_SECONDS;
 }
 
 export function cardCacheKey(externalId: string): string {

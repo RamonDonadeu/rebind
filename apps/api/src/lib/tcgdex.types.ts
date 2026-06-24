@@ -1,3 +1,13 @@
+export type TcgdexSetBrief = {
+  id: string;
+  name: string;
+};
+
+export type NormalizedSetBrief = {
+  id: string;
+  name: string;
+};
+
 export type TcgdexSearchCard = {
   id: string;
   localId: string;
@@ -31,7 +41,7 @@ export type NormalizedSearchResponse = {
   pagination: {
     page: number;
     limit: number;
-    total: number;
+    hasMore: boolean;
   };
 };
 
@@ -84,16 +94,24 @@ export function normalizeCardDetail(card: TcgdexCardDetail): NormalizedCardDetai
   };
 }
 
-export function paginateSearchResults(
+export function normalizeSetBrief(set: TcgdexSetBrief): NormalizedSetBrief {
+  return {
+    id: set.id,
+    name: set.name,
+  };
+}
+
+export function buildSearchResponse(
   cards: NormalizedSearchCard[],
   page: number,
   limit: number
 ): NormalizedSearchResponse {
-  const total = cards.length;
-  const start = (page - 1) * limit;
-
   return {
-    data: cards.slice(start, start + limit),
-    pagination: { page, limit, total },
+    data: cards,
+    pagination: {
+      page,
+      limit,
+      hasMore: cards.length === limit,
+    },
   };
 }

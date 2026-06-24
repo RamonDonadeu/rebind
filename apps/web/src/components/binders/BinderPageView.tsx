@@ -15,6 +15,9 @@ type BinderPageViewProps = {
   pageDirection: PageDirection | null;
   onPageChange: (page: number) => void;
   onSlotSelect: (slot: BinderSlot) => void;
+  onSlotReplace: (slot: BinderSlot) => void;
+  onSlotToggleOwned: (slot: BinderSlot) => void;
+  onSlotClear: (slot: BinderSlot) => void;
 };
 
 function PageArrow({
@@ -65,6 +68,9 @@ export function BinderPageView({
   pageDirection,
   onPageChange,
   onSlotSelect,
+  onSlotReplace,
+  onSlotToggleOwned,
+  onSlotClear,
 }: BinderPageViewProps) {
   const animationClass =
     pageDirection === "next"
@@ -90,6 +96,9 @@ export function BinderPageView({
           slots={slots}
           cardSize={cardSize}
           onSlotSelect={onSlotSelect}
+          onSlotReplace={onSlotReplace}
+          onSlotToggleOwned={onSlotToggleOwned}
+          onSlotClear={onSlotClear}
         />
       </div>
 

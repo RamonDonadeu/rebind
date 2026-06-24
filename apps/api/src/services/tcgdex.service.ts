@@ -1,14 +1,17 @@
 import type { FastifyBaseLogger } from "fastify";
-import { API_ERROR_CODES } from "@rebind/shared";
+import { API_ERROR_CODES, type CardSearchSortField } from "@rebind/shared";
 import { appError } from "../lib/errors.js";
 import {
+  buildSearchResponse,
   normalizeCardDetail,
   normalizeSearchCard,
-  paginateSearchResults,
+  normalizeSetBrief,
   type NormalizedCardDetail,
   type NormalizedSearchResponse,
+  type NormalizedSetBrief,
   type TcgdexCardDetail,
   type TcgdexSearchCard,
+  type TcgdexSetBrief,
 } from "../lib/tcgdex.types.js";
 import {
   cacheGet,
@@ -16,14 +19,26 @@ import {
   cardCacheKey,
   getCardCacheTtl,
   getSearchCacheTtl,
+  getSetsCacheTtl,
   searchCacheKey,
+  setsCacheKey,
 } from "./cache.service.js";
 
 const TCGDEX_TIMEOUT_MS = 10_000;
 
+const SORT_FIELD_MAP: Record<CardSearchSortField, string> = {
+  releaseDate: "releaseDate",
+  name: "name",
+  rarity: "rarity",
+  price: "pricing.tcgplayer.normal.marketPrice",
+};
+
 export type SearchCardsInput = {
-  q: string;
+  q?: string;
   set?: string;
+  rarity?: string;
+  sort?: CardSearchSortField;
+  order?: "asc" | "desc";
   page: number;
   limit: number;
 };
@@ -70,12 +85,29 @@ async function fetchTcgdex(
   }
 }
 
-function filterBySet(cards: TcgdexSearchCard[], setId?: string): TcgdexSearchCard[] {
-  if (!setId) {
-    return cards;
+function buildTcgdexSearchQuery(input: SearchCardsInput): Record<string, string> {
+  const query: Record<string, string> = {
+    "pagination:page": String(input.page),
+    "pagination:itemsPerPage": String(input.limit),
+  };
+
+  if (input.q) {
+    query.name = input.q;
   }
 
-  return cards.filter((card) => card.id.startsWith(`${setId}-`) || card.id.startsWith(`${setId}.`));
+  if (input.set) {
+    query["set.id"] = input.set;
+  }
+
+  if (input.rarity) {
+    query.rarity = input.rarity;
+  }
+
+  const sortField = input.sort ?? "releaseDate";
+  query["sort:field"] = SORT_FIELD_MAP[sortField];
+  query["sort:order"] = input.order === "desc" ? "DESC" : "ASC";
+
+  return query;
 }
 
 export async function searchCards(
@@ -90,10 +122,10 @@ export async function searchCards(
     return cached;
   }
 
-  const response = await fetchTcgdex("/cards", { name: input.q }, logger);
+  const response = await fetchTcgdex("/cards", buildTcgdexSearchQuery(input), logger);
 
   if (response.status === 404) {
-    return paginateSearchResults([], input.page, input.limit);
+    return buildSearchResponse([], input.page, input.limit);
   }
 
   if (response.status === 429) {
@@ -110,11 +142,46 @@ export async function searchCards(
   }
 
   const raw = (await response.json()) as TcgdexSearchCard[];
-  const filtered = filterBySet(raw, input.set);
-  const normalized = filtered.map(normalizeSearchCard);
-  const result = paginateSearchResults(normalized, input.page, input.limit);
+  const normalized = raw.map(normalizeSearchCard);
+  const result = buildSearchResponse(normalized, input.page, input.limit);
 
   await cacheSet(cacheKey, result, getSearchCacheTtl());
+
+  return result;
+}
+
+export async function listSets(logger: FastifyBaseLogger): Promise<NormalizedSetBrief[]> {
+  const cacheKey = setsCacheKey();
+  const cached = await cacheGet<NormalizedSetBrief[]>(cacheKey);
+
+  if (cached) {
+    logger.info({ event: "tcgdex.cache_hit", cacheKey, type: "sets" }, "tcgdex cache hit");
+    return cached;
+  }
+
+  const response = await fetchTcgdex(
+    "/sets",
+    { "sort:field": "name", "sort:order": "ASC" },
+    logger
+  );
+
+  if (response.status === 429) {
+    logger.warn({ event: "tcgdex.error", status: 429 }, "tcgdex rate limited");
+    throw appError(429, API_ERROR_CODES.RATE_LIMITED, "Too many card search requests. Try again shortly.");
+  }
+
+  if (!response.ok) {
+    logger.error(
+      { event: "tcgdex.error", status: response.status, path: "/sets" },
+      "tcgdex sets list failed"
+    );
+    throw appError(502, API_ERROR_CODES.TCGDEX_UNAVAILABLE, "Card catalog temporarily unavailable");
+  }
+
+  const raw = (await response.json()) as TcgdexSetBrief[];
+  const result = raw.map(normalizeSetBrief);
+
+  await cacheSet(cacheKey, result, getSetsCacheTtl());
 
   return result;
 }
