@@ -171,7 +171,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
       cardExternalId: card.externalId,
       cardName: card.name,
       imageUrl: card.imageUrl,
-      variant: "normal",
+      variant: card.variant,
       owned: true,
     };
 
@@ -186,7 +186,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
           cardExternalId: card.externalId,
           cardName: card.name,
           imageUrl: card.imageUrl,
-          variant: "normal",
+          variant: card.variant,
         }
       );
       updateSlotInState(updated);

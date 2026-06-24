@@ -24,11 +24,11 @@ export function searchCacheKey(params: SearchCacheParams): string {
     .update(JSON.stringify(params))
     .digest("hex");
 
-  return `tcgdex:search:${hash}`;
+  return `tcgdex:search:physical-v4:${hash}`;
 }
 
 export function setsCacheKey(): string {
-  return "tcgdex:sets:all";
+  return "tcgdex:sets:physical";
 }
 
 export function getSetsCacheTtl(): number {

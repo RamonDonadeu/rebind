@@ -3,16 +3,26 @@ import { API_ERROR_CODES, type CardSearchSortField } from "@rebind/shared";
 import { appError } from "../lib/errors.js";
 import {
   buildSearchResponse,
+  expandSearchCardsWithVariants,
+  extractSetId,
   normalizeCardDetail,
   normalizeSearchCard,
   normalizeSetBrief,
+  sortSearchResultsByPrice,
   type NormalizedCardDetail,
   type NormalizedSearchResponse,
   type NormalizedSetBrief,
+  type SearchCardEnrichment,
   type TcgdexCardDetail,
   type TcgdexSearchCard,
   type TcgdexSetBrief,
 } from "../lib/tcgdex.types.js";
+import {
+  getTcgPocketSetIds,
+  isTcgPocketSet,
+  pocketSetExclusionFilters,
+  TCG_POCKET_SERIES_ID,
+} from "../lib/tcgdex-pocket.js";
 import {
   cacheGet,
   cacheSet,
@@ -26,11 +36,10 @@ import {
 
 const TCGDEX_TIMEOUT_MS = 10_000;
 
-const SORT_FIELD_MAP: Record<CardSearchSortField, string> = {
+const SORT_FIELD_MAP: Record<Exclude<CardSearchSortField, "price">, string> = {
   releaseDate: "releaseDate",
   name: "name",
   rarity: "rarity",
-  price: "pricing.tcgplayer.normal.marketPrice",
 };
 
 export type SearchCardsInput = {
@@ -51,12 +60,18 @@ function tcgdexLang(): string {
   return process.env.TCGDEX_LANG ?? "en";
 }
 
-function buildTcgdexUrl(path: string, query?: Record<string, string>): string {
+function buildTcgdexUrl(path: string, query?: Record<string, string | string[]>): string {
   const url = new URL(`${tcgdexBaseUrl()}/${tcgdexLang()}${path}`);
 
   if (query) {
     for (const [key, value] of Object.entries(query)) {
-      url.searchParams.set(key, value);
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          url.searchParams.append(key, entry);
+        }
+      } else {
+        url.searchParams.set(key, value);
+      }
     }
   }
 
@@ -65,7 +80,7 @@ function buildTcgdexUrl(path: string, query?: Record<string, string>): string {
 
 async function fetchTcgdex(
   path: string,
-  query: Record<string, string> | undefined,
+  query: Record<string, string | string[]> | undefined,
   logger: FastifyBaseLogger
 ): Promise<Response> {
   const url = buildTcgdexUrl(path, query);
@@ -85,8 +100,11 @@ async function fetchTcgdex(
   }
 }
 
-function buildTcgdexSearchQuery(input: SearchCardsInput): Record<string, string> {
-  const query: Record<string, string> = {
+function buildTcgdexSearchQuery(
+  input: SearchCardsInput,
+  pocketSetIds: Set<string>
+): Record<string, string | string[]> {
+  const query: Record<string, string | string[]> = {
     "pagination:page": String(input.page),
     "pagination:itemsPerPage": String(input.limit),
   };
@@ -97,6 +115,8 @@ function buildTcgdexSearchQuery(input: SearchCardsInput): Record<string, string>
 
   if (input.set) {
     query["set.id"] = input.set;
+  } else if (pocketSetIds.size > 0) {
+    query["set.id"] = pocketSetExclusionFilters(pocketSetIds);
   }
 
   if (input.rarity) {
@@ -104,10 +124,64 @@ function buildTcgdexSearchQuery(input: SearchCardsInput): Record<string, string>
   }
 
   const sortField = input.sort ?? "releaseDate";
-  query["sort:field"] = SORT_FIELD_MAP[sortField];
+  const tcgSortField = sortField === "price" ? "releaseDate" : SORT_FIELD_MAP[sortField];
+  query["sort:field"] = tcgSortField;
   query["sort:order"] = input.order === "desc" ? "DESC" : "ASC";
 
   return query;
+}
+
+async function resolveSearchCardEnrichment(
+  externalId: string,
+  logger: FastifyBaseLogger
+): Promise<SearchCardEnrichment> {
+  const cached = await cacheGet<NormalizedCardDetail>(cardCacheKey(externalId));
+  if (cached) {
+    return {
+      variants: cached.variants,
+      setName: cached.setName,
+      pricing: cached.pricing,
+    };
+  }
+
+  const response = await fetchTcgdex(`/cards/${encodeURIComponent(externalId)}`, undefined, logger);
+
+  if (!response.ok) {
+    logger.warn(
+      { event: "tcgdex.enrichment_failed", externalId, status: response.status },
+      "failed to enrich search card; defaulting to normal variant"
+    );
+    return {
+      variants: ["normal"],
+      setName: null,
+      pricing: null,
+    };
+  }
+
+  const raw = (await response.json()) as TcgdexCardDetail;
+  const detail = normalizeCardDetail(raw);
+  await cacheSet(cardCacheKey(externalId), detail, getCardCacheTtl());
+
+  return {
+    variants: detail.variants,
+    setName: detail.setName,
+    pricing: detail.pricing,
+  };
+}
+
+async function resolveSearchCardEnrichments(
+  externalIds: string[],
+  logger: FastifyBaseLogger
+): Promise<Map<string, SearchCardEnrichment>> {
+  const uniqueIds = [...new Set(externalIds)];
+  const entries = await Promise.all(
+    uniqueIds.map(
+      async (externalId) =>
+        [externalId, await resolveSearchCardEnrichment(externalId, logger)] as const
+    )
+  );
+
+  return new Map(entries);
 }
 
 export async function searchCards(
@@ -122,7 +196,16 @@ export async function searchCards(
     return cached;
   }
 
-  const response = await fetchTcgdex("/cards", buildTcgdexSearchQuery(input), logger);
+  const pocketSetIds = await getTcgPocketSetIds(
+    (path) => fetchTcgdex(path, undefined, logger),
+    logger
+  );
+
+  if (input.set && isTcgPocketSet(input.set, pocketSetIds)) {
+    return buildSearchResponse([], input.page, input.limit);
+  }
+
+  const response = await fetchTcgdex("/cards", buildTcgdexSearchQuery(input, pocketSetIds), logger);
 
   if (response.status === 404) {
     return buildSearchResponse([], input.page, input.limit);
@@ -143,7 +226,17 @@ export async function searchCards(
 
   const raw = (await response.json()) as TcgdexSearchCard[];
   const normalized = raw.map(normalizeSearchCard);
-  const result = buildSearchResponse(normalized, input.page, input.limit);
+  const enrichmentByCardId = await resolveSearchCardEnrichments(
+    normalized.map((card) => card.externalId),
+    logger
+  );
+  let expanded = expandSearchCardsWithVariants(normalized, enrichmentByCardId);
+
+  if (input.sort === "price") {
+    expanded = sortSearchResultsByPrice(expanded, input.order ?? "asc");
+  }
+
+  const result = buildSearchResponse(expanded, input.page, input.limit, raw.length === input.limit);
 
   await cacheSet(cacheKey, result, getSearchCacheTtl());
 
@@ -161,7 +254,11 @@ export async function listSets(logger: FastifyBaseLogger): Promise<NormalizedSet
 
   const response = await fetchTcgdex(
     "/sets",
-    { "sort:field": "name", "sort:order": "ASC" },
+    {
+      "serie.id": `neq:${TCG_POCKET_SERIES_ID}`,
+      "sort:field": "name",
+      "sort:order": "ASC",
+    },
     logger
   );
 
@@ -196,6 +293,15 @@ export async function getCardDetail(
   if (cached) {
     logger.info({ event: "tcgdex.cache_hit", cacheKey, type: "card" }, "tcgdex cache hit");
     return cached;
+  }
+
+  const pocketSetIds = await getTcgPocketSetIds(
+    (path) => fetchTcgdex(path, undefined, logger),
+    logger
+  );
+
+  if (isTcgPocketSet(extractSetId(externalId), pocketSetIds)) {
+    throw appError(404, API_ERROR_CODES.NOT_FOUND, "Card not found");
   }
 
   const response = await fetchTcgdex(`/cards/${encodeURIComponent(externalId)}`, undefined, logger);

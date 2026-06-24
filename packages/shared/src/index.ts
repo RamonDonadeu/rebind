@@ -15,3 +15,5 @@ export {
   CARD_SEARCH_SORT_OPTIONS,
 } from "./card-search";
 export type { CardSearchSortField } from "./card-search";
+
+export { CARD_VARIANT_ORDER, cardVariantLabel } from "./card-variant";

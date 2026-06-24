@@ -97,7 +97,7 @@ export function CardSearch({
 
         {variant === "expanded" && filters.sort === "price" && (
           <p className="text-xs text-zinc-500">
-            Price sorting uses TCGdex market data. Prices are not shown in results yet.
+            Sorted by Cardmarket trend price (EUR) within this page.
           </p>
         )}
       </div>

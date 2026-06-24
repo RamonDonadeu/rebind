@@ -1,12 +1,32 @@
-import type { CardSearchSortField } from "@rebind/shared";
+import type { CardSearchSortField, CardVariant } from "@rebind/shared";
 
 export type SearchCard = {
   externalId: string;
   name: string;
   imageUrl: string | null;
   setId: string;
+  setName: string | null;
   localId: string;
+  variant: CardVariant;
+  marketPrice: number | null;
+  marketPriceCurrency: string | null;
 };
+
+export function formatMarketPrice(
+  price: number | null,
+  currency: string | null
+): string | null {
+  if (price === null || !currency) {
+    return null;
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
+}
 
 export type SearchPagination = {
   page: number;
