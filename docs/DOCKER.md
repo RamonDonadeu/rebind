@@ -83,6 +83,18 @@ apps/api/Dockerfile
 apps/web/Dockerfile
 ```
 
+## Centralized logging (optional)
+
+Run the separate log stack to collect logs from ReBind and other apps:
+
+```bash
+cd docker/logging
+cp .env.example .env
+docker compose up -d
+```
+
+Grafana UI: http://localhost:3001 — see [LOGGING.md](LOGGING.md).
+
 ## Troubleshooting
 
 **Port already in use:** Change `WEB_PORT` or `API_PORT` in `.env`.

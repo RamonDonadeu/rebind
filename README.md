@@ -40,6 +40,7 @@ See [docs/DOCKER.md](docs/DOCKER.md) for details.
 | [docs/API.md](docs/API.md) | REST API specification |
 | [docs/DOCKER.md](docs/DOCKER.md) | Local Docker development |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Dockploy production deployment |
+| [docs/LOGGING.md](docs/LOGGING.md) | Structured logs + Loki/Grafana stack |
 | [AGENTS.md](AGENTS.md) | AI agent context for this repo |
 
 ## Monorepo layout
@@ -53,6 +54,8 @@ rebind/
 │   ├── db/           # Prisma schema & client
 │   └── shared/       # Shared types & plan config
 ├── docs/
+├── docker/
+│   └── logging/      # Separate Loki + Grafana + Promtail stack
 ├── docker-compose.yml
 └── docker-compose.prod.yml
 ```

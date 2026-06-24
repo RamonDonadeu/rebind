@@ -23,7 +23,8 @@ ReBind lets collectors build **digital Pokémon TCG binders**: N pages, each wit
 - Use `PLANS` config in `packages/shared` for tier limits.
 - Docker: dev = `docker-compose.yml`, prod/Dockploy = `docker-compose.prod.yml`.
 - Dockploy env vars go in UI → `.env`; services use `env_file: .env` or `${VAR}` — redeploy after changes.
+- Logging: API emits JSON stdout; central stack in `docker/logging/` (Loki + Grafana). See [docs/LOGGING.md](docs/LOGGING.md).
 
 ## Docs
 
-Read `docs/PLAN.md` for roadmap, `docs/ARCHITECTURE.md` for design, `docs/DEPLOYMENT.md` for Dockploy.
+Read `docs/PLAN.md` for roadmap, `docs/ARCHITECTURE.md` for design, `docs/DEPLOYMENT.md` for Dockploy, `docs/LOGGING.md` for centralized logs.

@@ -48,6 +48,17 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_SERVICE_NAME: ${LOG_SERVICE_NAME:-rebind-api}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    labels:
+      logging.enabled: "true"
+      logging.app: "rebind-api"
+      logging.env: "${NODE_ENV:-production}"
     expose:
       - "4000"
     depends_on:

@@ -1,0 +1,63 @@
+# Centralized logging stack (Loki + Grafana + Promtail)
+#
+# Run separately from ReBind — collects logs from ALL Docker apps on this host.
+# See docs/LOGGING.md for setup and multi-app usage.
+#
+# Usage:
+#   cd docker/logging
+#   docker compose up -d
+#
+# Grafana UI: http://localhost:3001  (admin / see GRAFANA_ADMIN_PASSWORD in .env)
+
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    restart: unless-stopped
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - logging
+
+  grafana:
+    image: grafana/grafana:11.5.1
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+    networks:
+      - logging
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    restart: unless-stopped
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - promtail_positions:/positions
+      # Reads stdout from all containers on this Docker host
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - logging
+
+volumes:
+  loki_data:
+  grafana_data:
+  promtail_positions:
+
+networks:
+  logging:
+    driver: bridge

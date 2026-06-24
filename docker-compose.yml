@@ -41,6 +41,18 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rebind}:${POSTGRES_PASSWORD:-rebind}@postgres:5432/${POSTGRES_DB:-rebind}
       REDIS_URL: redis://redis:6379
       API_PORT: 4000
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      LOG_SERVICE_NAME: ${LOG_SERVICE_NAME:-rebind-api}
+      LOG_PRETTY: ${LOG_PRETTY:-false}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      logging.enabled: "true"
+      logging.app: "rebind-api"
+      logging.env: "${NODE_ENV:-development}"
     ports:
       - "${API_PORT:-4000}:4000"
     volumes:

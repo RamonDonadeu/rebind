@@ -11,3 +11,5 @@ alwaysApply: false
 - Validate request bodies with Zod
 - Auth middleware on all `/binders` and `/cards` routes
 - Never expose `password_hash` or Stripe secrets in responses
+- Use `request.log` / `app.log` with structured `event` fields — never `console.log`
+- See `apps/api/src/lib/logger.ts` and [docs/LOGGING.md](../../docs/LOGGING.md)

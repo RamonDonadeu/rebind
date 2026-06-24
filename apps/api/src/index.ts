@@ -1,29 +1,49 @@
+import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { prisma } from "@rebind/db";
 import { PLANS } from "@rebind/shared";
+import { createLoggerConfig, getServiceName } from "./lib/logger";
+import loggingPlugin from "./plugins/logging";
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = "0.0.0.0";
 
-const app = Fastify({ logger: true });
+const app = Fastify({
+  logger: createLoggerConfig(),
+  genReqId: (req) => {
+    const header = req.headers["x-request-id"];
+    if (typeof header === "string" && header.length > 0) return header;
+    return randomUUID();
+  },
+  requestIdHeader: "x-request-id",
+  disableRequestLogging: true,
+});
+
+await app.register(loggingPlugin);
 
 await app.register(cors, {
   origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
   credentials: true,
 });
 
-app.get("/health", async () => {
+app.get("/health", async (request) => {
   let db: "ok" | "error" = "ok";
   try {
     await prisma.$queryRaw`SELECT 1`;
-  } catch {
+  } catch (err) {
     db = "error";
+    request.log.error({ err, event: "health.db_check_failed" }, "database health check failed");
+  }
+
+  const status = db === "ok" ? "ok" : "degraded";
+  if (status === "degraded") {
+    request.log.warn({ event: "health.degraded", db }, "service degraded");
   }
 
   return {
-    status: db === "ok" ? "ok" : "degraded",
-    service: "rebind-api",
+    status,
+    service: getServiceName(),
     version: "0.1.0",
     db,
     plans: {
@@ -41,8 +61,17 @@ app.get("/", async () => ({
 const start = async () => {
   try {
     await app.listen({ port, host });
+    app.log.info(
+      {
+        event: "server.started",
+        port,
+        host,
+        service: getServiceName(),
+      },
+      "ReBind API listening"
+    );
   } catch (err) {
-    app.log.error(err);
+    app.log.fatal({ err, event: "server.start_failed" }, "failed to start server");
     process.exit(1);
   }
 };

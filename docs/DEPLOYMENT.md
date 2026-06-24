@@ -124,6 +124,20 @@ git checkout <previous-tag>
 - API health: `GET https://api.rebind.yourdomain.com/health`
 - Dockploy service logs per container
 
+## Centralized logging (optional, recommended)
+
+Deploy `docker/logging/docker-compose.yml` as a **separate Dockploy Compose app** on the same server:
+
+1. Compose file path: `docker/logging/docker-compose.yml`
+2. Promtail needs volume: `/var/run/docker.sock:/var/run/docker.sock:ro`
+3. Expose Grafana (port 3000 → map to 3001 or custom) at e.g. `logs.yourdomain.com`
+4. Set strong `GRAFANA_ADMIN_PASSWORD`
+5. Do **not** expose Loki (3100) publicly
+
+ReBind API is already labeled for collection. Query in Grafana: `{app="rebind-api"}`.
+
+Full guide: [LOGGING.md](./LOGGING.md).
+
 ## Local vs production compose
 
 | | `docker-compose.yml` | `docker-compose.prod.yml` |

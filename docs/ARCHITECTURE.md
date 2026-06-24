@@ -81,6 +81,24 @@ apps/api          → Imports @rebind/db, @rebind/shared
 apps/web          → Imports @rebind/shared (types only)
 ```
 
+## Logging
+
+The API writes **structured JSON** to stdout (Pino). A **separate** stack in `docker/logging/` collects logs from all Docker apps on the host via Promtail → Loki → Grafana.
+
+```mermaid
+flowchart LR
+  API[rebind-api] -->|JSON stdout| Docker[Docker logs]
+  Promtail -->|docker.sock| Docker
+  Promtail --> Loki[(Loki)]
+  Grafana --> Loki
+```
+
+- API containers are labeled `logging.enabled=true`, `logging.app=rebind-api`
+- Other apps on the same server opt in with the same labels
+- Not coupled to ReBind compose — deploy logging stack once per machine
+
+See [LOGGING.md](./LOGGING.md).
+
 ## Production (Dockploy)
 
 - Deploy via `docker-compose.prod.yml`

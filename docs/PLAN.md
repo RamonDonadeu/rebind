@@ -53,6 +53,7 @@ Do **not** use [pokemontcg.io](https://pokemontcg.io/) — migrated to paid [Scr
 - [ ] Prisma schema migrated
 - [ ] API health + DB connection
 - [ ] Web shell
+- [x] Structured API logging (Pino) + separate Loki/Grafana stack
 
 ### Phase 1 — MVP
 
