@@ -6,34 +6,64 @@ type PageNavigatorProps = {
   onPageChange: (page: number) => void;
 };
 
-export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNavigatorProps) {
+const WINDOW_SIZE = 5;
+
+function getVisiblePages(currentPage: number, totalPages: number): number[] {
+  const half = Math.floor(WINDOW_SIZE / 2);
+  let start = Math.max(1, currentPage - half);
+  let end = Math.min(totalPages, start + WINDOW_SIZE - 1);
+  start = Math.max(1, end - WINDOW_SIZE + 1);
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function NavButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: string;
+}) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <button
-          type="button"
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={label}
+      onClick={onClick}
+      className="flex h-7 min-w-7 items-center justify-center rounded-md border border-zinc-800 px-1.5 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200 disabled:pointer-events-none disabled:opacity-40"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNavigatorProps) {
+  const visiblePages = getVisiblePages(currentPage, totalPages);
+
+  return (
+    <footer className="sticky bottom-0 z-10 -mx-6 border-t border-zinc-800/80 bg-[var(--background)]/95 px-6 py-2 backdrop-blur-sm">
+      <div className="flex items-center justify-center gap-1">
+        <NavButton
+          label="First page"
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange(1)}
+        >
+          «
+        </NavButton>
+
+        <NavButton
+          label="Previous page"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 disabled:opacity-40 hover:border-zinc-500"
         >
-          Previous
-        </button>
-        <p className="text-sm text-zinc-400">
-          Page <span className="font-medium text-zinc-200">{currentPage}</span> of {totalPages}
-        </p>
-        <button
-          type="button"
-          disabled={currentPage >= totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-300 disabled:opacity-40 hover:border-zinc-500"
-        >
-          Next
-        </button>
-      </div>
+          ‹
+        </NavButton>
 
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        {Array.from({ length: totalPages }, (_, index) => {
-          const page = index + 1;
+        {visiblePages.map((page) => {
           const active = page === currentPage;
 
           return (
@@ -41,7 +71,9 @@ export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNav
               key={page}
               type="button"
               onClick={() => onPageChange(page)}
-              className={`min-w-9 shrink-0 rounded-md px-2 py-1 text-xs font-medium transition ${
+              aria-label={`Page ${page}`}
+              aria-current={active ? "page" : undefined}
+              className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-xs font-medium transition ${
                 active
                   ? "bg-brand-600 text-white"
                   : "border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
@@ -51,7 +83,23 @@ export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNav
             </button>
           );
         })}
+
+        <NavButton
+          label="Next page"
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+        >
+          ›
+        </NavButton>
+
+        <NavButton
+          label="Last page"
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(totalPages)}
+        >
+          »
+        </NavButton>
       </div>
-    </div>
+    </footer>
   );
 }

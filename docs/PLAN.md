@@ -16,7 +16,7 @@ Personal collectors who want to mirror physical binders digitally, search cards 
 |---------|-------------|
 | **Binder** | Named collection with N pages (e.g. 24) and a grid layout (3×3 or 3×4) |
 | **Page** | One side of a binder sheet; contains a grid of slots |
-| **Slot** | Single cell; holds zero or one card reference |
+| **Slot** | Single cell; holds zero or one card reference; `owned` tracks whether the user has the card or only plans to acquire it |
 | **Card reference** | TCGdex ID + display cache (name, image) + variant (normal/reverse/holo) |
 
 ## Monetization (freemium)

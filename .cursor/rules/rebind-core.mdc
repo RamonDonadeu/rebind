@@ -8,6 +8,7 @@ alwaysApply: true
 - Monorepo: `apps/api` (Fastify), `apps/web` (Next.js), `packages/db`, `packages/shared`
 - Card data via TCGdex only; proxy through API with Redis cache
 - Plan limits in `packages/shared/src/plans.ts`; enforce in API
-- Slots store card id + variant, never price
+- Slots store card id + variant + owned, never price
+- DB changes: edit `schema.prisma`, then `npm run migrate -w @rebind/db -- --name <name>` — never hand-write migration SQL (see `prisma-migrations` rule)
 - Minimize scope; match existing patterns before adding abstractions
 - Docs live in `docs/`; update PLAN.md when shipping phases

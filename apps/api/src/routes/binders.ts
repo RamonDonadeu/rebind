@@ -11,6 +11,7 @@ import {
   listBinders,
   placeCard,
   updateBinder,
+  updateSlotOwned,
   validatePageCountForUser,
 } from "../services/binder.service.js";
 
@@ -38,6 +39,11 @@ const placeCardSchema = z.object({
   cardName: z.string().min(1),
   imageUrl: z.string().url(),
   variant: cardVariantSchema.optional().default("normal"),
+  owned: z.boolean().optional(),
+});
+
+const patchSlotSchema = z.object({
+  owned: z.boolean(),
 });
 
 function validationError(reply: FastifyReply, message: string) {
@@ -158,6 +164,46 @@ export default async function binderRoutes(app: FastifyInstance) {
         cardExternalId: parsed.data.cardExternalId,
       },
       "card placed in slot"
+    );
+    return reply.send(slot);
+  });
+
+  app.patch("/binders/:id/pages/:page/slots/:row/:col", async (request, reply) => {
+    const user = getAuthUser(request);
+    const { id, page, row, col } = request.params as {
+      id: string;
+      page: string;
+      row: string;
+      col: string;
+    };
+    const parsed = patchSlotSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return validationError(reply, parsed.error.issues[0]?.message ?? "Invalid request body");
+    }
+
+    const pageIndex = parseSlotCoordinate(page, "page");
+    const rowIndex = parseSlotCoordinate(row, "row");
+    const colIndex = parseSlotCoordinate(col, "col");
+
+    const slot = await updateSlotOwned(
+      user.id,
+      id,
+      pageIndex,
+      rowIndex,
+      colIndex,
+      parsed.data.owned
+    );
+    request.log.info(
+      {
+        event: "slot.ownership_updated",
+        binderId: id,
+        pageIndex,
+        row: rowIndex,
+        col: colIndex,
+        owned: parsed.data.owned,
+      },
+      "slot ownership updated"
     );
     return reply.send(slot);
   });

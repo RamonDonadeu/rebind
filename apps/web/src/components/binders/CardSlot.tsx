@@ -20,16 +20,30 @@ export function CardSlot({ slot, onSelect }: CardSlotProps) {
       aria-label={filled ? `Slot with ${slot.cardName}` : "Empty slot"}
     >
       {filled && slot.imageUrl && !imageError ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={slot.imageUrl}
-          alt={slot.cardName ?? "Card"}
-          loading="lazy"
-          className="h-full w-full object-contain p-1"
-          onError={() => setImageError(true)}
-        />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={slot.imageUrl}
+            alt={slot.cardName ?? "Card"}
+            loading="lazy"
+            className={`h-full w-full object-contain p-1 ${slot.owned ? "" : "opacity-60"}`}
+            onError={() => setImageError(true)}
+          />
+          {!slot.owned && (
+            <span className="absolute right-1 top-1 rounded bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-950">
+              Need
+            </span>
+          )}
+        </>
       ) : filled ? (
-        <div className="flex h-full flex-col items-center justify-center gap-1 p-2 text-center">
+        <div
+          className={`flex h-full flex-col items-center justify-center gap-1 p-2 text-center ${slot.owned ? "" : "opacity-60"}`}
+        >
+          {!slot.owned && (
+            <span className="rounded bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-950">
+              Need
+            </span>
+          )}
           <span className="text-xs text-zinc-500">No image</span>
           <span className="line-clamp-2 text-xs font-medium text-zinc-300">{slot.cardName}</span>
         </div>

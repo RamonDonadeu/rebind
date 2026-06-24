@@ -1,0 +1,24 @@
+---
+description: Prisma schema and migration conventions — use migrate dev, never hand-write SQL
+globs: packages/db/prisma/**
+alwaysApply: false
+---
+
+# Prisma migrations
+
+On database changes:
+
+1. Edit `packages/db/prisma/schema.prisma`.
+2. Run a Prisma migration — **do not create migration files manually**.
+
+```bash
+npm run migrate -w @rebind/db -- --name descriptive_snake_case_name
+```
+
+Equivalent: `npx prisma migrate dev --name descriptive_snake_case_name` from `packages/db`.
+
+**Never** hand-write files under `packages/db/prisma/migrations/`. Prisma must generate the SQL and `migration_lock.toml` state.
+
+After schema changes, run `npm run db:generate` if the client is stale.
+
+See `.cursor/skills/rebind-prisma/SKILL.md` for full workflow.

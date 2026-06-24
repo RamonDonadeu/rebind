@@ -36,6 +36,7 @@ function toSlot(slot: BinderSlot) {
     cardName: slot.cardName,
     imageUrl: slot.imageUrl,
     variant: slot.variant,
+    owned: slot.owned,
   };
 }
 
@@ -236,6 +237,7 @@ export async function placeCard(
     cardName: string;
     imageUrl: string;
     variant: CardVariant;
+    owned?: boolean;
   }
 ) {
   const binder = await requireOwnedBinder(binderId, userId);
@@ -259,6 +261,9 @@ export async function placeCard(
     throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
   }
 
+  const owned =
+    input.owned ?? (slot.cardExternalId !== null ? slot.owned : true);
+
   const updated = await prisma.binderSlot.update({
     where: { id: slot.id },
     data: {
@@ -266,7 +271,49 @@ export async function placeCard(
       cardName: input.cardName,
       imageUrl: input.imageUrl,
       variant: input.variant,
+      owned,
     },
+  });
+
+  return toSlot(updated);
+}
+
+export async function updateSlotOwned(
+  userId: string,
+  binderId: string,
+  pageIndex: number,
+  row: number,
+  col: number,
+  owned: boolean
+) {
+  const binder = await requireOwnedBinder(binderId, userId);
+
+  if (!isValidSlotPosition(binder.layout, pageIndex, row, col, binder.pageCount)) {
+    throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
+  }
+
+  const slot = await prisma.binderSlot.findUnique({
+    where: {
+      binderId_pageIndex_row_col: {
+        binderId,
+        pageIndex,
+        row,
+        col,
+      },
+    },
+  });
+
+  if (!slot) {
+    throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
+  }
+
+  if (!slot.cardExternalId) {
+    throw appError(400, API_ERROR_CODES.VALIDATION_ERROR, "Cannot set ownership on an empty slot");
+  }
+
+  const updated = await prisma.binderSlot.update({
+    where: { id: slot.id },
+    data: { owned },
   });
 
   return toSlot(updated);
@@ -307,6 +354,7 @@ export async function clearSlot(
       cardName: null,
       imageUrl: null,
       variant: "normal",
+      owned: true,
     },
   });
 

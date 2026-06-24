@@ -28,7 +28,9 @@ Proxy TCGdex through `apps/api`; cache in Redis. Frontend never calls TCGdex in 
 
 | Store on slot | Do NOT store on slot |
 |---------------|----------------------|
-| `cardExternalId`, `cardName`, `imageUrl`, `variant` | Price |
+| `cardExternalId`, `cardName`, `imageUrl`, `variant`, `owned` | Price |
+
+`owned` (default `true`) distinguishes cards the user already has from cards planned for their physical binder but not yet acquired. Phase 3 valuations should count only owned slots toward collection value.
 
 Prices → `card_prices` table (cache). Binder total → `binder_valuations` snapshot.
 

@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BinderGrid } from "@/components/binders/BinderGrid";
 import { BinderHeader } from "@/components/binders/BinderHeader";
+import { BinderPageView } from "@/components/binders/BinderPageView";
 import { CardSearchModal } from "@/components/binders/CardSearchModal";
+import { CardSizeControl } from "@/components/binders/CardSizeControl";
 import { PageNavigator } from "@/components/binders/PageNavigator";
 import { SlotActionMenu } from "@/components/binders/SlotActionMenu";
 import { apiClient, ApiClientError } from "@/lib/api-client";
 import type { BinderDetail, BinderSlot, SearchCard } from "@/lib/binders";
 import { layoutLabel, slotsForPage } from "@/lib/binders";
+import { DEFAULT_CARD_SIZE, type CardSizeLevel } from "@/lib/card-size";
 
 type BinderEditorPageProps = {
   binderId: string;
@@ -26,6 +28,15 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
   const [activeSlot, setActiveSlot] = useState<BinderSlot | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [slotMenuOpen, setSlotMenuOpen] = useState(false);
+  const [cardSize, setCardSize] = useState<CardSizeLevel>(DEFAULT_CARD_SIZE);
+  const [pageDirection, setPageDirection] = useState<"next" | "prev" | null>(null);
+
+  function handlePageChange(page: number) {
+    if (page !== currentPage) {
+      setPageDirection(page > currentPage ? "next" : "prev");
+    }
+    setCurrentPage(page);
+  }
 
   const loadBinder = useCallback(async () => {
     try {
@@ -95,6 +106,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
       cardName: card.name,
       imageUrl: card.imageUrl,
       variant: "normal",
+      owned: true,
     };
 
     updateSlotInState(optimistic);
@@ -135,6 +147,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
       cardName: null,
       imageUrl: null,
       variant: "normal",
+      owned: true,
     };
 
     updateSlotInState(optimistic);
@@ -150,6 +163,35 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
       updateSlotInState(previous);
       const message =
         err instanceof ApiClientError ? err.message : "Failed to clear slot.";
+      setActionError(message);
+    }
+  }
+
+  async function toggleSlotOwned() {
+    if (!binder || !activeSlot || !activeSlot.cardExternalId) {
+      return;
+    }
+
+    const { pageIndex, row, col } = activeSlot;
+    const nextOwned = !activeSlot.owned;
+    const previous = { ...activeSlot };
+
+    const optimistic: BinderSlot = { ...activeSlot, owned: nextOwned };
+    updateSlotInState(optimistic);
+    setActiveSlot(optimistic);
+
+    try {
+      const updated = await apiClient.patch<BinderSlot>(
+        `/binders/${binder.id}/pages/${pageIndex}/slots/${row}/${col}`,
+        { owned: nextOwned }
+      );
+      updateSlotInState(updated);
+      setActiveSlot(updated);
+    } catch (err) {
+      updateSlotInState(previous);
+      setActiveSlot(previous);
+      const message =
+        err instanceof ApiClientError ? err.message : "Failed to update ownership.";
       setActionError(message);
     }
   }
@@ -188,7 +230,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
   const pageSlots = slotsForPage(binder, pageIndex);
 
   return (
-    <div className="space-y-8">
+    <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-6 pb-2">
       <BinderHeader
         name={binder.name}
         layoutLabel={layoutLabel(binder.layout)}
@@ -203,13 +245,26 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
         </p>
       )}
 
+      <CardSizeControl value={cardSize} onChange={setCardSize} />
+
+      <div className="flex flex-1 items-center py-2">
+        <BinderPageView
+          layout={binder.layout}
+          slots={pageSlots}
+          currentPage={currentPage}
+          totalPages={binder.pageCount}
+          cardSize={cardSize}
+          pageDirection={pageDirection}
+          onPageChange={handlePageChange}
+          onSlotSelect={handleSlotSelect}
+        />
+      </div>
+
       <PageNavigator
         currentPage={currentPage}
         totalPages={binder.pageCount}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
       />
-
-      <BinderGrid layout={binder.layout} slots={pageSlots} onSlotSelect={handleSlotSelect} />
 
       {slotMenuOpen && activeSlot && (
         <SlotActionMenu
@@ -218,6 +273,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
             setSlotMenuOpen(false);
             setSearchOpen(true);
           }}
+          onToggleOwned={() => void toggleSlotOwned()}
           onClear={() => void clearSlot()}
           onClose={() => {
             setSlotMenuOpen(false);

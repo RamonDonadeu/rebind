@@ -19,7 +19,7 @@ ReBind lets collectors build **digital Pokémon TCG binders**: N pages, each wit
 ## Conventions
 
 - Enforce plan limits (binder count) in the **API**, not only the UI.
-- Store `cardExternalId` + `variant` on slots; prices live in `card_prices` cache, not on slots.
+- Store `cardExternalId` + `variant` + `owned` on slots; prices live in `card_prices` cache, not on slots.
 - Use `PLANS` config in `packages/shared` for tier limits.
 - Docker: dev = `docker-compose.yml`, prod/Dockploy = `docker-compose.prod.yml`.
 - Dockploy env vars go in UI → `.env`; services use `env_file: .env` or `${VAR}` — redeploy after changes.

@@ -41,6 +41,7 @@ All JSON request/response bodies unless noted.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | PUT | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Place or update card |
+| PATCH | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Update slot metadata (e.g. ownership) |
 | DELETE | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Clear slot |
 
 ### Place card body
@@ -50,7 +51,18 @@ All JSON request/response bodies unless noted.
   "cardExternalId": "sv3-125",
   "cardName": "Pikachu",
   "imageUrl": "https://assets.tcgdex.net/...",
-  "variant": "normal"
+  "variant": "normal",
+  "owned": true
+}
+```
+
+`owned` is optional (defaults to `true` on empty slots; preserved when replacing a card). Set `owned: false` for cards planned in the binder but not yet acquired.
+
+### Update slot ownership
+
+```json
+{
+  "owned": false
 }
 ```
 

@@ -38,6 +38,7 @@ erDiagram
     string card_name
     string image_url
     enum variant
+    bool owned
   }
 
   CardPrice {
@@ -94,8 +95,9 @@ Unique constraint: `(binder_id, page_index, row, col)`
 | card_name | VARCHAR | denormalized |
 | image_url | VARCHAR | denormalized |
 | variant | ENUM | `normal`, `reverse`, `holo` — default `normal` |
+| owned | BOOLEAN | default `true`; `false` = planned for binder but not yet owned |
 
-Slots are **pre-created** when a binder is created (all pages × all cells) so the grid API is simple.
+Slots are **pre-created** when a binder is created (all pages × all cells) so the grid API is simple. A filled slot can represent a card the user already owns or one they still need to acquire for their physical binder.
 
 ### `card_prices` (Phase 3)
 

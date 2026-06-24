@@ -20,6 +20,7 @@ export type BinderSlot = {
   cardName: string | null;
   imageUrl: string | null;
   variant: string;
+  owned: boolean;
 };
 
 export type BinderDetail = BinderSummary & {
@@ -74,6 +75,7 @@ export function slotsForPage(binder: BinderDetail, pageIndex: number): BinderSlo
           cardName: null,
           imageUrl: null,
           variant: "normal",
+          owned: true,
         }
       );
     }
