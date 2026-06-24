@@ -11,11 +11,13 @@ On database changes:
 1. Edit `packages/db/prisma/schema.prisma`.
 2. Run a Prisma migration — **do not create migration files manually**.
 
+Requires root `.env` with `DATABASE_URL` (see `rebind-prisma` skill).
+
 ```bash
 npm run migrate -w @rebind/db -- --name descriptive_snake_case_name
 ```
 
-Equivalent: `npx prisma migrate dev --name descriptive_snake_case_name` from `packages/db`.
+From `packages/db`, use `npm run migrate -- --name …` (loads `../../.env`).
 
 **Never** hand-write files under `packages/db/prisma/migrations/`. Prisma must generate the SQL and `migration_lock.toml` state.
 

@@ -34,7 +34,7 @@ function NavButton({
       disabled={disabled}
       aria-label={label}
       onClick={onClick}
-      className="flex h-7 min-w-7 items-center justify-center rounded-md border border-zinc-800 px-1.5 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200 disabled:pointer-events-none disabled:opacity-40"
+      className="rounded-md border border-zinc-800 px-1.5 py-0.5 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200 disabled:pointer-events-none disabled:opacity-40"
     >
       {children}
     </button>
@@ -45,8 +45,8 @@ export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNav
   const visiblePages = getVisiblePages(currentPage, totalPages);
 
   return (
-    <footer className="sticky bottom-0 z-10 -mx-6 border-t border-zinc-800/80 bg-[var(--background)]/95 px-6 py-2 backdrop-blur-sm">
-      <div className="flex items-center justify-center gap-1">
+    <footer className="sticky bottom-0 z-10 -mx-6 shrink-0 border-t border-zinc-800/80 bg-[var(--background)]/95 px-6 py-1.5 backdrop-blur-sm">
+      <div className="flex items-center justify-center gap-1 leading-none">
         <NavButton
           label="First page"
           disabled={currentPage <= 1}
@@ -73,7 +73,7 @@ export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNav
               onClick={() => onPageChange(page)}
               aria-label={`Page ${page}`}
               aria-current={active ? "page" : undefined}
-              className={`flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-xs font-medium transition ${
+              className={`min-w-7 rounded-md px-1.5 py-0.5 text-xs font-medium transition ${
                 active
                   ? "bg-brand-600 text-white"
                   : "border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"

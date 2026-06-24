@@ -111,9 +111,20 @@ One row per binder; updated on price refresh.
 
 ## Migrations
 
+Requires a root `.env` with `DATABASE_URL` (copy from `.env.example`).
+
+**From host** (Postgres reachable — use `localhost:5432`, not `postgres:5432`):
+
 ```bash
-# From repo root with DB running
 npm run db:migrate
+# Named migration:
+npm run migrate -w @rebind/db -- --name descriptive_snake_case_name
+```
+
+**With Docker** (stack running; `DATABASE_URL` uses `postgres` hostname inside containers):
+
+```bash
+docker compose exec api npm run db:migrate
 ```
 
 ## Conventions

@@ -9,10 +9,10 @@
   },
   "scripts": {
     "generate": "prisma generate",
-    "migrate": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
-    "studio": "prisma studio",
-    "push": "prisma db push"
+    "migrate": "node scripts/run-prisma.mjs migrate dev",
+    "migrate:deploy": "node scripts/run-prisma.mjs migrate deploy",
+    "studio": "node scripts/run-prisma.mjs studio",
+    "push": "node scripts/run-prisma.mjs db push"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1"

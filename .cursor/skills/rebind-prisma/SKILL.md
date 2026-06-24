@@ -13,19 +13,31 @@ Migrations: `packages/db/prisma/migrations/` (generated only — never hand-writ
 ## Migration workflow
 
 1. Edit `schema.prisma` only.
-2. Generate the migration with Prisma CLI — **do not** create `migrations/*/migration.sql` yourself.
+2. Ensure root `.env` exists with `DATABASE_URL` (see **Environment** below).
+3. Generate the migration with Prisma CLI — **do not** create `migrations/*/migration.sql` yourself.
 
 ```bash
 # From repo root (preferred)
 npm run migrate -w @rebind/db -- --name descriptive_snake_case_name
 
-# Or from packages/db
+# Or from packages/db (loads ../../.env automatically)
 cd packages/db
-npx prisma migrate dev --name descriptive_snake_case_name
+npm run migrate -- --name descriptive_snake_case_name
 ```
 
-3. Commit both `schema.prisma` and the new folder under `migrations/`.
-4. Regenerate client if needed: `npm run db:generate`
+4. Commit both `schema.prisma` and the new folder under `migrations/`.
+5. Regenerate client if needed: `npm run db:generate`
+
+## Environment
+
+`DATABASE_URL` lives in the **repo root** `.env` for host runs. Prisma scripts load it via `node --env-file` only when `DATABASE_URL` is not already set (e.g. Docker Compose injects it for the `api` container).
+
+| Where you run | `DATABASE_URL` host |
+|---------------|-------------------|
+| Host (`npm run db:migrate`) | `localhost:5432` |
+| Docker (`docker compose exec api …`) | `postgres:5432` |
+
+Copy `.env.example` → `.env` and adjust the host for your setup.
 
 ## Production / CI
 

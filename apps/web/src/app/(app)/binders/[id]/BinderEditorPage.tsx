@@ -230,7 +230,7 @@ export default function BinderEditorPage({ binderId }: BinderEditorPageProps) {
   const pageSlots = slotsForPage(binder, pageIndex);
 
   return (
-    <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-6 pb-2">
+    <div className="-mb-8 flex min-h-[calc(100vh-10rem)] flex-col gap-6">
       <BinderHeader
         name={binder.name}
         layoutLabel={layoutLabel(binder.layout)}
