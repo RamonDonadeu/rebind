@@ -27,4 +27,12 @@ ReBind lets collectors build **digital Pokémon TCG binders**: N pages, each wit
 
 ## Docs
 
-Read `docs/PLAN.md` for roadmap, `docs/ARCHITECTURE.md` for design, `docs/DEPLOYMENT.md` for Dockploy, `docs/LOGGING.md` for centralized logs.
+Read `docs/phases/README.md` for **implementation phases** (agent-scoped work).
+Read `docs/PLAN.md` for product vision, `docs/ARCHITECTURE.md` for design, `docs/DEPLOYMENT.md` for Dockploy, `docs/LOGGING.md` for centralized logs.
+
+## Implementation workflow
+
+1. Pick a phase from `docs/phases/` (e.g. `01a-auth-api.md`)
+2. Complete only that phase's deliverables and acceptance criteria
+3. Update the phase checklist and `docs/phases/README.md` status table
+4. Use [Conventional Commits](docs/RELEASE.md) in PR titles (`feat:`, `fix:`, etc.) for automated releases

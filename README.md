@@ -34,7 +34,9 @@ See [docs/DOCKER.md](docs/DOCKER.md) for details.
 
 | Doc | Description |
 |-----|-------------|
-| [docs/PLAN.md](docs/PLAN.md) | Product roadmap and phases |
+| [docs/PLAN.md](docs/PLAN.md) | Product roadmap and phases overview |
+| [docs/phases/README.md](docs/phases/README.md) | **Agent-scoped implementation phases** |
+| [docs/RELEASE.md](docs/RELEASE.md) | Versioning & conventional commits |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design and data flow |
 | [docs/DATABASE.md](docs/DATABASE.md) | Schema and conventions |
 | [docs/API.md](docs/API.md) | REST API specification |
