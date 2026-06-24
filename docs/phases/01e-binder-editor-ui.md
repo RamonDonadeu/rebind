@@ -1,6 +1,6 @@
 # Phase 1E — Binder Editor UI (MVP Complete)
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete — **MVP complete** 🎉  
 **Layer:** `apps/web` (+ minor API tweaks if needed)  
 **Depends on:** [1B](01b-binders-api.md), [1C](01c-tcgdex-proxy.md), [1D](01d-web-auth-shell.md)  
 **Blocks:** Phases 2, 3, 4
@@ -37,13 +37,13 @@
 
 ### Components
 
-- [ ] `BinderCard.tsx` — list item
-- [ ] `CreateBinderDialog.tsx`
-- [ ] `BinderGrid.tsx` — CSS grid, correct aspect ratio (~2.5:3.5)
-- [ ] `CardSlot.tsx` — empty state / card thumbnail
-- [ ] `PageNavigator.tsx` — prev/next, page number pills (1–24)
-- [ ] `CardSearchModal.tsx` — debounced search, results list
-- [ ] `BinderHeader.tsx` — name, back link, delete
+- [x] `BinderCard.tsx` — list item
+- [x] `CreateBinderDialog.tsx`
+- [x] `BinderGrid.tsx` — CSS grid, correct aspect ratio (~2.5:3.5)
+- [x] `CardSlot.tsx` — empty state / card thumbnail
+- [x] `PageNavigator.tsx` — prev/next, page number pills (1–24)
+- [x] `CardSearchModal.tsx` — debounced search, results list
+- [x] `BinderHeader.tsx` — name, back link, delete
 
 ### Grid behavior
 
@@ -74,15 +74,15 @@ When at free limit, disable create button and show message:
 
 ## Acceptance criteria (MVP)
 
-- [ ] Register → create binder → 24 pages visible
-- [ ] Search "Charizard" → place card in slot → image shows
-- [ ] Navigate to page 5 → place another card
-- [ ] Reload browser → binder state persisted
-- [ ] Clear slot works
-- [ ] Second binder creation blocked with clear error
-- [ ] Delete binder returns to list
-- [ ] Works on desktop viewport (mobile polish is Phase 2)
-- [ ] No console errors; broken images show fallback
+- [x] Register → create binder → 24 pages visible
+- [x] Search "Charizard" → place card in slot → image shows
+- [x] Navigate to page 5 → place another card
+- [x] Reload browser → binder state persisted
+- [x] Clear slot works
+- [x] Second binder creation blocked with clear error
+- [x] Delete binder returns to list
+- [x] Works on desktop viewport (mobile polish is Phase 2)
+- [x] No console errors; broken images show fallback
 
 ## MVP milestone 🎉
 

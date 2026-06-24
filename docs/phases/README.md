@@ -92,7 +92,9 @@ These can run in parallel after prerequisites are met:
 | 1B | ✅ Complete |
 | 1C | ✅ Complete |
 | 1D | ✅ Complete |
-| 1E | ⬜ Not started |
+| 1E | ✅ Complete — **MVP done** 🎉 |
 | 2–5 | ⬜ Not started |
+
+**MVP complete:** Phases 0–1E deliver register → login → create binder → search cards → place in slots → reload.
 
 _Update this table when completing a phase._
