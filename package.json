@@ -13,9 +13,19 @@
     "db:generate": "npm run generate -w @rebind/db",
     "db:migrate": "npm run migrate -w @rebind/db",
     "db:migrate:deploy": "npm run migrate:deploy -w @rebind/db",
-    "db:studio": "npm run studio -w @rebind/db"
+    "db:studio": "npm run studio -w @rebind/db",
+    "release": "semantic-release"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.1",
+    "semantic-release": "^24.2.3"
   }
 }
