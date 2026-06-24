@@ -1,0 +1,12 @@
+---
+description: Next.js web app conventions for apps/web
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Web Conventions
+
+- App Router; server components by default, `"use client"` only when needed
+- Call ReBind API via `NEXT_PUBLIC_API_URL`; no direct TCGdex calls
+- Tailwind for styling; card slots use aspect ratio ~2.5:3.5
+- Show plan limits in UI (e.g. "1/1 binders") but always rely on API enforcement

@@ -1,0 +1,13 @@
+---
+description: Fastify API conventions for apps/api
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+# API Conventions
+
+- Use `@rebind/db` for Prisma, `@rebind/shared` for types and PLANS
+- Return errors as `{ error: { code, message } }` with correct HTTP status
+- Validate request bodies with Zod
+- Auth middleware on all `/binders` and `/cards` routes
+- Never expose `password_hash` or Stripe secrets in responses

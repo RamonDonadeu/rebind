@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanTier {
+  free
+  collector
+}
+
+enum SubscriptionStatus {
+  none
+  active
+  past_due
+  canceled
+}
+
+enum BinderLayout {
+  GRID_3X3
+  GRID_3X4
+}
+
+enum CardVariant {
+  normal
+  reverse
+  holo
+}
+
+model User {
+  id                   String             @id @default(uuid())
+  email                String             @unique
+  passwordHash         String             @map("password_hash")
+  planTier             PlanTier           @default(free) @map("plan_tier")
+  subscriptionStatus   SubscriptionStatus @default(none) @map("subscription_status")
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  subscriptionEndsAt   DateTime?          @map("subscription_ends_at")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  binders Binder[]
+
+  @@map("users")
+}
+
+model Binder {
+  id        String       @id @default(uuid())
+  userId    String       @map("user_id")
+  name      String
+  pageCount Int          @default(24) @map("page_count")
+  layout    BinderLayout @default(GRID_3X3)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slots      BinderSlot[]
+  valuation  BinderValuation?
+
+  @@index([userId])
+  @@map("binders")
+}
+
+model BinderSlot {
+  id               String       @id @default(uuid())
+  binderId         String       @map("binder_id")
+  pageIndex        Int          @map("page_index")
+  row              Int
+  col              Int
+  cardExternalId   String?      @map("card_external_id")
+  cardName         String?      @map("card_name")
+  imageUrl         String?      @map("image_url")
+  variant          CardVariant  @default(normal)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  binder Binder @relation(fields: [binderId], references: [id], onDelete: Cascade)
+
+  @@unique([binderId, pageIndex, row, col])
+  @@index([binderId])
+  @@index([cardExternalId])
+  @@map("binder_slots")
+}
+
+model CardPrice {
+  cardExternalId String   @map("card_external_id")
+  variant        CardVariant
+  source         String
+  currency       String
+  marketPrice    Decimal? @map("market_price") @db.Decimal(12, 4)
+  lowPrice       Decimal? @map("low_price") @db.Decimal(12, 4)
+  fetchedAt      DateTime @map("fetched_at")
+
+  @@id([cardExternalId, variant, source])
+  @@map("card_prices")
+}
+
+model BinderValuation {
+  binderId          String   @id @map("binder_id")
+  totalUsd          Decimal? @map("total_usd") @db.Decimal(14, 2)
+  totalEur          Decimal? @map("total_eur") @db.Decimal(14, 2)
+  cardCount         Int      @default(0) @map("card_count")
+  pricedCount       Int      @default(0) @map("priced_count")
+  missingPriceCount Int      @default(0) @map("missing_price_count")
+  computedAt        DateTime @map("computed_at")
+
+  binder Binder @relation(fields: [binderId], references: [id], onDelete: Cascade)
+
+  @@map("binder_valuations")
+}

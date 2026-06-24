@@ -1,0 +1,13 @@
+---
+description: Core ReBind project conventions — always apply
+alwaysApply: true
+---
+
+# ReBind Core
+
+- Monorepo: `apps/api` (Fastify), `apps/web` (Next.js), `packages/db`, `packages/shared`
+- Card data via TCGdex only; proxy through API with Redis cache
+- Plan limits in `packages/shared/src/plans.ts`; enforce in API
+- Slots store card id + variant, never price
+- Minimize scope; match existing patterns before adding abstractions
+- Docs live in `docs/`; update PLAN.md when shipping phases
