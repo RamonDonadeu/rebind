@@ -1,6 +1,6 @@
 # Phase 1B — Binders API
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Layer:** `apps/api`  
 **Depends on:** [Phase 1A](01a-auth-api.md)  
 **Blocks:** Phase 1E
@@ -39,12 +39,12 @@ Authenticated users can create, read, update, and delete binders. Slots are pre-
 
 ### Implementation
 
-- [ ] `apps/api/src/routes/binders.ts`
-- [ ] `apps/api/src/services/binder.service.ts` — business logic
-- [ ] `apps/api/src/lib/slots.ts` — `createSlotsForBinder(binderId, pageCount, layout)`
-- [ ] Plan limit check on `POST /binders` using `maxBindersForPlan()` from `@rebind/shared`
-- [ ] Ownership check: user can only access own binders → `403` or `404`
-- [ ] Zod validation for create/patch/place bodies
+- [x] `apps/api/src/routes/binders.ts`
+- [x] `apps/api/src/services/binder.service.ts` — business logic
+- [x] `apps/api/src/lib/slots.ts` — `createSlotsForBinder(binderId, pageCount, layout)`
+- [x] Plan limit check on `POST /binders` using `maxBindersForPlan()` from `@rebind/shared`
+- [x] Ownership check: user can only access own binders → `404`
+- [x] Zod validation for create/patch/place bodies
 
 ### Slot pre-creation logic
 
@@ -74,7 +74,7 @@ Free tier = 1 binder. No Stripe yet — all users are `free` / `none`.
 
 - Changing `pageCount` **up**: create new empty slots for new pages
 - Changing `pageCount` **down**: delete slots on removed pages (confirm cards lost)
-- Changing `layout`: **defer to Phase 2** or require empty binder — document choice in PR
+- Changing `layout`: requires empty binder (all slots cleared); otherwise `400`
 
 ### Place card body
 
@@ -91,13 +91,13 @@ Client provides data from TCGdex (Phase 1C). This phase does not validate agains
 
 ## Acceptance criteria
 
-- [ ] Free user can create 1 binder; second → `403 BINDER_LIMIT_REACHED`
-- [ ] `GET /binders/:id` returns all slots for all pages (including empty)
-- [ ] Place card updates slot; clear sets card fields to null
-- [ ] Cannot access another user's binder
-- [ ] `page` param is 0-based in API (document in responses)
-- [ ] Delete binder removes all slots
-- [ ] Events logged: `binder.created`, `binder.deleted`, `slot.placed`, `slot.cleared`
+- [x] Free user can create 1 binder; second → `403 BINDER_LIMIT_REACHED`
+- [x] `GET /binders/:id` returns all slots for all pages (including empty)
+- [x] Place card updates slot; clear sets card fields to null
+- [x] Cannot access another user's binder
+- [x] `page` param is 0-based in API (document in responses)
+- [x] Delete binder removes all slots
+- [x] Events logged: `binder.created`, `binder.deleted`, `slot.placed`, `slot.cleared`
 
 ## Handoff to Phase 1E
 

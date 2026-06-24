@@ -8,6 +8,7 @@ import { createLoggerConfig, getServiceName } from "./lib/logger.js";
 import loggingPlugin from "./plugins/logging.js";
 import authPlugin from "./plugins/auth.js";
 import authRoutes from "./routes/auth.js";
+import binderRoutes from "./routes/binders.js";
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = "0.0.0.0";
@@ -34,6 +35,7 @@ await app.register(cors, {
 
 await app.register(authPlugin);
 await app.register(authRoutes);
+await app.register(binderRoutes);
 
 app.get("/health", async (request) => {
   let db: "ok" | "error" = "ok";
