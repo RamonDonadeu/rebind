@@ -1,12 +1,13 @@
 import type { BinderLayout, BinderSlot } from "@/lib/binders";
 import { gridDimensions } from "@/lib/binders";
-import { CARD_SIZE_MAX_WIDTH, type CardSizeLevel } from "@/lib/card-size";
+import { gridMaxWidthClass, spreadPageWidthClass, type CardSizeLevel } from "@/lib/card-size";
 import { CardSlot } from "./CardSlot";
 
 type BinderGridProps = {
   layout: BinderLayout;
   slots: BinderSlot[];
   cardSize?: CardSizeLevel;
+  spread?: boolean;
   onSlotSelect: (slot: BinderSlot) => void;
   onSlotReplace: (slot: BinderSlot) => void;
   onSlotToggleOwned: (slot: BinderSlot) => void;
@@ -17,16 +18,18 @@ export function BinderGrid({
   layout,
   slots,
   cardSize = 3,
+  spread = false,
   onSlotSelect,
   onSlotReplace,
   onSlotToggleOwned,
   onSlotClear,
 }: BinderGridProps) {
   const { cols } = gridDimensions(layout);
+  const widthClass = spread ? "w-full" : `mx-auto ${gridMaxWidthClass(cardSize)}`;
 
   return (
     <div
-      className={`mx-auto grid w-full gap-2 transition-[max-width] duration-300 ease-out sm:gap-3 ${CARD_SIZE_MAX_WIDTH[cardSize]}`}
+      className={`grid gap-2 transition-[max-width] duration-300 ease-out sm:gap-3 ${widthClass}`}
       style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
     >
       {slots.map((slot) => (

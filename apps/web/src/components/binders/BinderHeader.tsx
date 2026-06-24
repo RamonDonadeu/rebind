@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { BinderOptionsMenu } from "@/components/binders/BinderOptionsMenu";
 import { CardSizeControl } from "@/components/binders/CardSizeControl";
-import { DeleteBinderDialog } from "@/components/binders/DeleteBinderDialog";
 import type { CardSizeLevel } from "@/lib/card-size";
+import type { PageViewMode } from "@/lib/binder-view";
 
 type BinderHeaderProps = {
   name: string;
@@ -12,6 +13,8 @@ type BinderHeaderProps = {
   pageCount: number;
   cardSize: CardSizeLevel;
   onCardSizeChange: (size: CardSizeLevel) => void;
+  pageViewMode: PageViewMode;
+  onPageViewModeChange: (mode: PageViewMode) => void;
   onRename: (name: string) => Promise<void>;
   onDelete: () => Promise<void>;
 };
@@ -34,37 +37,19 @@ function PencilIcon() {
   );
 }
 
-function TrashIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-4 w-4"
-      aria-hidden
-    >
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}
-
 export function BinderHeader({
   name,
   layoutLabel,
   pageCount,
   cardSize,
   onCardSizeChange,
+  pageViewMode,
+  onPageViewModeChange,
   onRename,
   onDelete,
 }: BinderHeaderProps) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(name);
-  const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function handleRename(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,9 +66,8 @@ export function BinderHeader({
   }
 
   return (
-    <>
-      <header className="sticky top-0 z-10 -mx-6 -mt-8 shrink-0 border-b border-zinc-800/80 bg-[var(--background)]/95 px-6 pb-4 pt-8 backdrop-blur-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <header className="sticky top-0 z-10 -mt-8 shrink-0 border-b border-zinc-800/80 bg-[var(--background)]/95 pb-4 pt-8 backdrop-blur-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <Link href="/binders" className="text-sm text-zinc-500 transition hover:text-zinc-300">
             ← Back to binders
@@ -143,24 +127,14 @@ export function BinderHeader({
         <div className="flex flex-wrap items-center gap-4">
           <CardSizeControl value={cardSize} onChange={onCardSizeChange} />
 
-          <button
-            type="button"
-            onClick={() => setDeleteOpen(true)}
-            aria-label="Delete binder"
-            className="rounded-lg border border-red-900/50 p-2 text-red-300 transition hover:border-red-700 hover:bg-red-950/30"
-          >
-            <TrashIcon />
-          </button>
+          <BinderOptionsMenu
+            binderName={name}
+            pageViewMode={pageViewMode}
+            onPageViewModeChange={onPageViewModeChange}
+            onDelete={onDelete}
+          />
         </div>
-        </div>
-      </header>
-
-      <DeleteBinderDialog
-        open={deleteOpen}
-        binderName={name}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={onDelete}
-      />
-    </>
+      </div>
+    </header>
   );
 }

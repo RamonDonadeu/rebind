@@ -1,18 +1,24 @@
 "use client";
 
+import type { PageViewMode } from "@/lib/binder-view";
+import { buildBinderSpreads } from "@/lib/binder-view";
+
 type PageNavigatorProps = {
-  currentPage: number;
+  viewMode: PageViewMode;
   totalPages: number;
+  currentPage: number;
+  currentSpreadIndex: number;
   onPageChange: (page: number) => void;
+  onSpreadChange: (spreadIndex: number) => void;
 };
 
 const WINDOW_SIZE = 5;
 
-function getVisiblePages(currentPage: number, totalPages: number): number[] {
+function getVisibleIndices(current: number, total: number): number[] {
   const half = Math.floor(WINDOW_SIZE / 2);
-  let start = Math.max(1, currentPage - half);
-  let end = Math.min(totalPages, start + WINDOW_SIZE - 1);
-  start = Math.max(1, end - WINDOW_SIZE + 1);
+  let start = Math.max(0, current - half);
+  let end = Math.min(total - 1, start + WINDOW_SIZE - 1);
+  start = Math.max(0, end - WINDOW_SIZE + 1);
 
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
@@ -34,19 +40,100 @@ function NavButton({
       disabled={disabled}
       aria-label={label}
       onClick={onClick}
-      className="rounded-md border border-zinc-800 px-1.5 py-0.5 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-200 disabled:pointer-events-none disabled:opacity-40"
+      className="rounded-md border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-xs text-zinc-300 transition hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-100 disabled:pointer-events-none disabled:opacity-40"
     >
       {children}
     </button>
   );
 }
 
-export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNavigatorProps) {
-  const visiblePages = getVisiblePages(currentPage, totalPages);
+const FOOTER_CLASS =
+  "fixed inset-x-0 bottom-0 z-20 border-t border-zinc-800 bg-zinc-950 py-2 shadow-[0_-8px_24px_rgba(0,0,0,0.45)]";
+
+const FOOTER_INNER_CLASS = "mx-auto flex w-full max-w-full items-center justify-center px-6 leading-none";
+
+export function PageNavigator({
+  viewMode,
+  totalPages,
+  currentPage,
+  currentSpreadIndex,
+  onPageChange,
+  onSpreadChange,
+}: PageNavigatorProps) {
+  if (viewMode === "spread") {
+    const spreads = buildBinderSpreads(totalPages);
+    const visibleIndices = getVisibleIndices(currentSpreadIndex, spreads.length);
+
+    return (
+      <footer className={FOOTER_CLASS}>
+        <div className={`${FOOTER_INNER_CLASS} gap-1`}>
+          <NavButton
+            label="First spread"
+            disabled={currentSpreadIndex <= 0}
+            onClick={() => onSpreadChange(0)}
+          >
+            «
+          </NavButton>
+
+          <NavButton
+            label="Previous spread"
+            disabled={currentSpreadIndex <= 0}
+            onClick={() => onSpreadChange(currentSpreadIndex - 1)}
+          >
+            ‹
+          </NavButton>
+
+          {visibleIndices.map((index) => {
+            const spread = spreads[index];
+            if (!spread) {
+              return null;
+            }
+
+            const active = index === currentSpreadIndex;
+
+            return (
+              <button
+                key={spread.index}
+                type="button"
+                onClick={() => onSpreadChange(index)}
+                aria-label={`Pages ${spread.label}`}
+                aria-current={active ? "page" : undefined}
+                className={`min-w-7 rounded-md px-1.5 py-0.5 text-xs font-medium transition ${
+                  active
+                    ? "bg-brand-600 text-white shadow-sm"
+                    : "border border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-800 hover:text-white"
+                }`}
+              >
+                {spread.label}
+              </button>
+            );
+          })}
+
+          <NavButton
+            label="Next spread"
+            disabled={currentSpreadIndex >= spreads.length - 1}
+            onClick={() => onSpreadChange(currentSpreadIndex + 1)}
+          >
+            ›
+          </NavButton>
+
+          <NavButton
+            label="Last spread"
+            disabled={currentSpreadIndex >= spreads.length - 1}
+            onClick={() => onSpreadChange(spreads.length - 1)}
+          >
+            »
+          </NavButton>
+        </div>
+      </footer>
+    );
+  }
+
+  const visiblePages = getVisibleIndices(currentPage - 1, totalPages).map((index) => index + 1);
 
   return (
-    <footer className="sticky bottom-0 z-10 -mx-6 shrink-0 border-t border-zinc-800/80 bg-[var(--background)]/95 px-6 py-1.5 backdrop-blur-sm">
-      <div className="flex items-center justify-center gap-1 leading-none">
+    <footer className={FOOTER_CLASS}>
+      <div className={`${FOOTER_INNER_CLASS} gap-1`}>
         <NavButton
           label="First page"
           disabled={currentPage <= 1}
@@ -75,8 +162,8 @@ export function PageNavigator({ currentPage, totalPages, onPageChange }: PageNav
               aria-current={active ? "page" : undefined}
               className={`min-w-7 rounded-md px-1.5 py-0.5 text-xs font-medium transition ${
                 active
-                  ? "bg-brand-600 text-white"
-                  : "border border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                  ? "bg-brand-600 text-white shadow-sm"
+                  : "border border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-800 hover:text-white"
               }`}
             >
               {page}

@@ -37,6 +37,25 @@ export type CardSearchFilters = {
   page: number;
 };
 
+export const DEFAULT_CARD_SEARCH_FILTERS: CardSearchFilters = {
+  query: "",
+  setId: "",
+  rarity: "",
+  sort: "releaseDate",
+  order: "asc",
+  page: 1,
+};
+
+export function hasActiveFilters(filters: CardSearchFilters): boolean {
+  return (
+    filters.query.trim().length > 0 ||
+    filters.setId.length > 0 ||
+    filters.rarity.length > 0 ||
+    filters.sort !== DEFAULT_CARD_SEARCH_FILTERS.sort ||
+    filters.order !== DEFAULT_CARD_SEARCH_FILTERS.order
+  );
+}
+
 export function buildSearchParams(filters: CardSearchFilters): string {
   const params = new URLSearchParams();
 

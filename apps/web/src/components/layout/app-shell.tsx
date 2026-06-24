@@ -1,16 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useAuth } from "@/contexts/auth-context";
 
+function useWideBinderLayout(): boolean {
+  const pathname = usePathname();
+  return /^\/binders\/[^/]+$/.test(pathname);
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
+  const wideLayout = useWideBinderLayout();
+  const containerClass = wideLayout ? "max-w-full" : "max-w-5xl";
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      <header className="border-b border-zinc-800 bg-zinc-900/50">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
+    <div className="flex min-h-screen flex-col bg-[var(--background)]">
+      <header className="shrink-0 border-b border-zinc-800 bg-zinc-900/50">
+        <div className={`mx-auto flex ${containerClass} items-center justify-between gap-4 px-6 py-4`}>
           <div className="flex items-center gap-6">
             <Link href="/binders" className="text-sm font-semibold tracking-wide text-brand-500">
               ReBind
@@ -43,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+      <main className={`mx-auto flex min-h-0 w-full flex-1 flex-col ${containerClass} px-6 py-8`}>{children}</main>
     </div>
   );
 }

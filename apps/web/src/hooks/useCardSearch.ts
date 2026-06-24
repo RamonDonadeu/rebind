@@ -5,6 +5,8 @@ import { apiClient } from "@/lib/api-client";
 import {
   buildSearchParams,
   canSearch,
+  DEFAULT_CARD_SEARCH_FILTERS,
+  hasActiveFilters,
   type CardSearchFilters,
   type CardSetOption,
   type SearchCard,
@@ -12,22 +14,13 @@ import {
 } from "@/lib/cards";
 import { CARD_SEARCH_SORT_OPTIONS, type CardSearchSortField } from "@rebind/shared";
 
-const DEFAULT_FILTERS: CardSearchFilters = {
-  query: "",
-  setId: "",
-  rarity: "",
-  sort: "releaseDate",
-  order: "asc",
-  page: 1,
-};
-
 type UseCardSearchOptions = {
   enabled?: boolean;
   debounceMs?: number;
 };
 
 export function useCardSearch({ enabled = true, debounceMs = 300 }: UseCardSearchOptions = {}) {
-  const [filters, setFilters] = useState<CardSearchFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<CardSearchFilters>(DEFAULT_CARD_SEARCH_FILTERS);
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [results, setResults] = useState<SearchCard[]>([]);
   const [pagination, setPagination] = useState<SearchPagination>({
@@ -40,8 +33,8 @@ export function useCardSearch({ enabled = true, debounceMs = 300 }: UseCardSearc
   const [setsLoading, setSetsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const reset = useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+  const clearFilters = useCallback(() => {
+    setFilters(DEFAULT_CARD_SEARCH_FILTERS);
     setDebouncedQuery("");
     setResults([]);
     setPagination({ page: 1, limit: 24, hasMore: false });
@@ -171,7 +164,8 @@ export function useCardSearch({ enabled = true, debounceMs = 300 }: UseCardSearc
     setsLoading,
     error,
     sortOptions: CARD_SEARCH_SORT_OPTIONS,
-    reset,
+    hasActiveFilters: hasActiveFilters(filters),
+    clearFilters,
     updateQuery,
     updateSetId,
     updateRarity,

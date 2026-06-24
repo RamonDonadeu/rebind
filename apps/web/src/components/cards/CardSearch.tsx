@@ -1,27 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
 import { canSearch } from "@/lib/cards";
 import type { SearchCard } from "@/lib/cards";
-import { useCardSearch } from "@/hooks/useCardSearch";
+import type { useCardSearch } from "@/hooks/useCardSearch";
 import { CardSearchFilters } from "./CardSearchFilters";
 import { CardSearchPagination } from "./CardSearchPagination";
 import { CardSearchResults } from "./CardSearchResults";
 
 export type CardSearchVariant = "compact" | "expanded";
 
+export type CardSearchState = ReturnType<typeof useCardSearch>;
+
 type CardSearchProps = {
   variant?: CardSearchVariant;
-  enabled?: boolean;
   title?: string;
+  search: CardSearchState;
   onSelect: (card: SearchCard) => void;
   onClose?: () => void;
 };
 
 export function CardSearch({
   variant = "expanded",
-  enabled = true,
   title = "Search cards",
+  search,
   onSelect,
   onClose,
 }: CardSearchProps) {
@@ -35,20 +36,15 @@ export function CardSearch({
     setsLoading,
     error,
     sortOptions,
-    reset,
+    hasActiveFilters,
+    clearFilters,
     updateQuery,
     updateSetId,
     updateRarity,
     updateSort,
     updateOrder,
     goToPage,
-  } = useCardSearch({ enabled });
-
-  useEffect(() => {
-    if (!enabled) {
-      reset();
-    }
-  }, [enabled, reset]);
+  } = search;
 
   const searchable = canSearch({
     query: debouncedQuery,
@@ -60,15 +56,26 @@ export function CardSearch({
       <div className="shrink-0 space-y-3 border-b border-zinc-800 p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-zinc-100">{title}</h2>
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-sm text-zinc-400 transition hover:text-zinc-200"
-            >
-              Close
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-sm text-zinc-400 transition hover:text-zinc-200"
+              >
+                Clear filters
+              </button>
+            )}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-sm text-zinc-400 transition hover:text-zinc-200"
+              >
+                Close
+              </button>
+            )}
+          </div>
         </div>
 
         <CardSearchFilters
