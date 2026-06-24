@@ -23,6 +23,7 @@ All JSON request/response bodies unless noted.
 | GET | `/binders/:id` | ✓ | Binder + all slots |
 | PATCH | `/binders/:id` | ✓ | Update name, page_count, layout |
 | DELETE | `/binders/:id` | ✓ | Delete binder and slots |
+| POST | `/binders/:id/duplicate` | ✓ | Clone binder and all slots (counts toward plan limit) |
 
 ### Create binder body
 
@@ -41,8 +42,9 @@ All JSON request/response bodies unless noted.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | PUT | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Place or update card |
-| PATCH | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Update slot metadata (e.g. ownership) |
+| PATCH | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Update slot metadata (ownership, variant) |
 | DELETE | `/binders/:id/pages/:page/slots/:row/:col` | ✓ | Clear slot |
+| POST | `/binders/:id/slots/swap` | ✓ | Swap or move cards between slots |
 
 ### Place card body
 
@@ -58,13 +60,41 @@ All JSON request/response bodies unless noted.
 
 `owned` is optional (defaults to `true` on empty slots; preserved when replacing a card). Set `owned: false` for cards planned in the binder but not yet acquired.
 
-### Update slot ownership
+### Update slot metadata
+
+At least one field required.
 
 ```json
 {
-  "owned": false
+  "owned": false,
+  "variant": "reverse"
 }
 ```
+
+`variant`: `normal` | `reverse` | `holo`
+
+### Swap slots
+
+```json
+{
+  "source": { "page": 0, "row": 0, "col": 0 },
+  "target": { "page": 0, "row": 1, "col": 2 }
+}
+```
+
+`page` is 0-based (matches DB `page_index`). Moves card to empty target or swaps when both filled.
+
+### Duplicate binder
+
+Optional body:
+
+```json
+{
+  "name": "Copy of Base Set"
+}
+```
+
+Defaults to `Copy of {original name}`. Returns `201` with full binder detail.
 
 ## Cards (TCGdex proxy)
 

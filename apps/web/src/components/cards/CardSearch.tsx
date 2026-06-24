@@ -17,6 +17,7 @@ type CardSearchProps = {
   search: CardSearchState;
   onSelect: (card: SearchCard) => void;
   onClose?: () => void;
+  panelOpen?: boolean;
 };
 
 export function CardSearch({
@@ -25,6 +26,7 @@ export function CardSearch({
   search,
   onSelect,
   onClose,
+  panelOpen = true,
 }: CardSearchProps) {
   const {
     filters,
@@ -52,11 +54,11 @@ export function CardSearch({
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 space-y-3 border-b border-zinc-800 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-zinc-100">{title}</h2>
-          <div className="flex items-center gap-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 space-y-2 border-b border-zinc-800 p-3 sm:space-y-3 sm:p-4">
+        <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
+          <h2 className="truncate text-base font-semibold text-zinc-100 sm:text-lg">{title}</h2>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {hasActiveFilters && (
               <button
                 type="button"
@@ -80,6 +82,7 @@ export function CardSearch({
 
         <CardSearchFilters
           variant={variant}
+          panelOpen={panelOpen}
           query={filters.query}
           setId={filters.setId}
           rarity={filters.rarity}
@@ -95,14 +98,14 @@ export function CardSearch({
           onOrderChange={updateOrder}
         />
 
-        {variant === "expanded" && filters.sort === "price" && (
+        {filters.sort === "price" && (
           <p className="text-xs text-zinc-500">
             Sorted by Cardmarket trend price (EUR) within this page.
           </p>
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4">
         <CardSearchResults
           variant={variant}
           results={results}
@@ -114,7 +117,7 @@ export function CardSearch({
       </div>
 
       {searchable && !loading && results.length > 0 && (
-        <div className="shrink-0 p-4 pt-0">
+        <div className="shrink-0 p-3 pt-0 sm:p-4">
           <CardSearchPagination
             page={pagination.page}
             hasMore={pagination.hasMore}

@@ -11,4 +11,5 @@ body {
   color: var(--foreground);
   background: var(--background);
   min-height: 100vh;
+  overflow-x: hidden;
 }

@@ -1,9 +1,12 @@
 "use client";
 
+import type { CardVariant } from "@rebind/shared";
 import type { BinderLayout, BinderSlot } from "@/lib/binders";
 import type { PageViewMode } from "@/lib/binder-view";
 import type { CardSizeLevel } from "@/lib/card-size";
 import { spreadPageWidthClass } from "@/lib/card-size";
+import type { SlotDragPayload } from "@/lib/slot-drag";
+import { usePageSwipe } from "@/hooks/use-page-swipe";
 import { BinderGrid } from "./BinderGrid";
 import { EmptyPageGrid } from "./EmptyPageGrid";
 
@@ -23,12 +26,20 @@ type BinderPageViewProps = {
   totalSpreads: number;
   cardSize: CardSizeLevel;
   pageDirection: PageDirection | null;
+  moveModeSlot?: BinderSlot | null;
+  isMobile?: boolean;
   onPageChange: (page: number) => void;
   onSpreadChange: (spreadIndex: number) => void;
   onSlotSelect: (slot: BinderSlot) => void;
   onSlotReplace: (slot: BinderSlot) => void;
   onSlotToggleOwned: (slot: BinderSlot) => void;
+  onSlotVariantChange: (slot: BinderSlot, variant: CardVariant) => void;
   onSlotClear: (slot: BinderSlot) => void;
+  onSlotSwap: (source: SlotDragPayload, target: BinderSlot) => void;
+  onMoveModeStart?: (slot: BinderSlot) => void;
+  onMoveModeEnd?: () => void;
+  swipeEnabled?: boolean;
+  onOpenMenuKeyChange?: (key: string | null) => void;
 };
 
 function PageArrow({
@@ -77,10 +88,15 @@ function SpreadSide({
   layout,
   cardSize,
   placeholderLabel,
+  moveModeSlot,
   onSlotSelect,
   onSlotReplace,
   onSlotToggleOwned,
+  onSlotVariantChange,
   onSlotClear,
+  onSlotSwap,
+  onMoveModeStart,
+  onMoveModeEnd,
 }: {
   side: "left" | "right";
   pageNumber: number | null | undefined;
@@ -88,10 +104,16 @@ function SpreadSide({
   layout: BinderLayout;
   cardSize: CardSizeLevel;
   placeholderLabel?: string;
+  moveModeSlot?: BinderSlot | null;
+  mobile?: boolean;
   onSlotSelect: (slot: BinderSlot) => void;
   onSlotReplace: (slot: BinderSlot) => void;
   onSlotToggleOwned: (slot: BinderSlot) => void;
+  onSlotVariantChange: (slot: BinderSlot, variant: CardVariant) => void;
   onSlotClear: (slot: BinderSlot) => void;
+  onSlotSwap: (source: SlotDragPayload, target: BinderSlot) => void;
+  onMoveModeStart?: (slot: BinderSlot) => void;
+  onMoveModeEnd?: () => void;
 }) {
   const hasPage = Boolean(pageNumber && slots);
   const pageAlign = hasPage
@@ -119,10 +141,15 @@ function SpreadSide({
             slots={slots}
             cardSize={cardSize}
             spread
+            moveModeSlot={moveModeSlot}
             onSlotSelect={onSlotSelect}
             onSlotReplace={onSlotReplace}
             onSlotToggleOwned={onSlotToggleOwned}
+            onSlotVariantChange={onSlotVariantChange}
             onSlotClear={onSlotClear}
+            onSlotSwap={onSlotSwap}
+            onMoveModeStart={onMoveModeStart}
+            onMoveModeEnd={onMoveModeEnd}
           />
         ) : (
           <EmptyPageGrid layout={layout} />
@@ -146,12 +173,20 @@ export function BinderPageView({
   totalSpreads,
   cardSize,
   pageDirection,
+  moveModeSlot = null,
+  isMobile = false,
   onPageChange,
   onSpreadChange,
   onSlotSelect,
   onSlotReplace,
   onSlotToggleOwned,
+  onSlotVariantChange,
   onSlotClear,
+  onSlotSwap,
+  onMoveModeStart,
+  onMoveModeEnd,
+  swipeEnabled = false,
+  onOpenMenuKeyChange,
 }: BinderPageViewProps) {
   const animationClass =
     pageDirection === "next"
@@ -160,11 +195,13 @@ export function BinderPageView({
         ? "animate-page-slide-in-prev"
         : "";
 
-  const isSpread = viewMode === "spread";
+  const isSpread = !isMobile && viewMode === "spread";
   const canGoPrev = isSpread ? currentSpreadIndex > 0 : currentPage > 1;
   const canGoNext = isSpread
     ? currentSpreadIndex < totalSpreads - 1
     : currentPage < totalPages;
+
+  const arrowClass = isMobile ? "hidden" : "shrink-0";
 
   function handlePrev() {
     if (isSpread) {
@@ -185,12 +222,35 @@ export function BinderPageView({
   }
 
   const contentKey = isSpread ? `spread-${currentSpreadIndex}` : `page-${currentPage}`;
+  const pageIsEmpty = !isSpread && slots.every((slot) => !slot.cardExternalId);
+
+  const swipe = usePageSwipe({
+    enabled: swipeEnabled && isMobile && !moveModeSlot,
+    onSwipeLeft: () => {
+      if (canGoNext) {
+        handleNext();
+      }
+    },
+    onSwipeRight: () => {
+      if (canGoPrev) {
+        handlePrev();
+      }
+    },
+  });
 
   return (
-    <div className="flex w-full min-w-0 self-stretch items-center gap-2 sm:gap-4">
-      <PageArrow direction="prev" disabled={!canGoPrev} onClick={handlePrev} />
+    <div className="flex w-full min-w-0 self-stretch items-stretch sm:items-center sm:gap-4">
+      <div className={arrowClass}>
+        <PageArrow direction="prev" disabled={!canGoPrev} onClick={handlePrev} />
+      </div>
 
-      <div key={contentKey} className={`min-w-0 w-full flex-1 basis-0 ${animationClass}`}>
+      <div
+        key={contentKey}
+        className={`min-w-0 w-full flex-1 basis-0 ${animationClass} ${swipeEnabled && isMobile ? "touch-pan-y" : ""}`}
+        onTouchStart={swipe.onTouchStart}
+        onTouchEnd={swipe.onTouchEnd}
+        onTouchCancel={swipe.onTouchCancel}
+      >
         {isSpread ? (
           <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2 sm:gap-x-3">
             <SpreadSide
@@ -200,10 +260,15 @@ export function BinderPageView({
               layout={layout}
               cardSize={cardSize}
               placeholderLabel={currentSpreadIndex === 0 ? "Inside cover" : undefined}
+              moveModeSlot={moveModeSlot}
               onSlotSelect={onSlotSelect}
               onSlotReplace={onSlotReplace}
               onSlotToggleOwned={onSlotToggleOwned}
+              onSlotVariantChange={onSlotVariantChange}
               onSlotClear={onSlotClear}
+              onSlotSwap={onSlotSwap}
+              onMoveModeStart={onMoveModeStart}
+              onMoveModeEnd={onMoveModeEnd}
             />
 
             <div
@@ -217,26 +282,52 @@ export function BinderPageView({
               slots={rightSlots}
               layout={layout}
               cardSize={cardSize}
+              moveModeSlot={moveModeSlot}
               onSlotSelect={onSlotSelect}
               onSlotReplace={onSlotReplace}
               onSlotToggleOwned={onSlotToggleOwned}
+              onSlotVariantChange={onSlotVariantChange}
               onSlotClear={onSlotClear}
+              onSlotSwap={onSlotSwap}
+              onMoveModeStart={onMoveModeStart}
+              onMoveModeEnd={onMoveModeEnd}
             />
           </div>
         ) : (
-          <BinderGrid
-            layout={layout}
-            slots={slots}
-            cardSize={cardSize}
-            onSlotSelect={onSlotSelect}
-            onSlotReplace={onSlotReplace}
-            onSlotToggleOwned={onSlotToggleOwned}
-            onSlotClear={onSlotClear}
-          />
+          <div className="mx-auto w-full max-w-full space-y-2 sm:space-y-3">
+            {isMobile && (
+              <p className="text-center text-sm font-medium text-zinc-400">
+                Page {currentPage} of {totalPages}
+              </p>
+            )}
+            {pageIsEmpty && (
+              <p className="text-center text-sm text-zinc-500">
+                This page is empty — tap a slot to add a card.
+              </p>
+            )}
+            <BinderGrid
+              layout={layout}
+              slots={slots}
+              cardSize={cardSize}
+              mobile={isMobile}
+              moveModeSlot={moveModeSlot}
+              onSlotSelect={onSlotSelect}
+              onSlotReplace={onSlotReplace}
+              onSlotToggleOwned={onSlotToggleOwned}
+              onSlotVariantChange={onSlotVariantChange}
+              onSlotClear={onSlotClear}
+              onSlotSwap={onSlotSwap}
+              onMoveModeStart={onMoveModeStart}
+              onMoveModeEnd={onMoveModeEnd}
+              onOpenMenuKeyChange={onOpenMenuKeyChange}
+            />
+          </div>
         )}
       </div>
 
-      <PageArrow direction="next" disabled={!canGoNext} onClick={handleNext} />
+      <div className={arrowClass}>
+        <PageArrow direction="next" disabled={!canGoNext} onClick={handleNext} />
+      </div>
     </div>
   );
 }

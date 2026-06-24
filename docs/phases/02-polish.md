@@ -1,6 +1,6 @@
 # Phase 2 — Polish
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Layer:** Full-stack  
 **Depends on:** [Phase 1E](01e-binder-editor-ui.md) (MVP)  
 **Blocks:** Phase 5 (partially)
@@ -24,35 +24,35 @@ Improve binder editing UX: variants, drag-and-drop, mobile layout, binder manage
 
 ### 2A — Variant picker
 
-- [ ] Slot detail popover: change variant (`normal` | `reverse` | `holo`)
-- [ ] `PATCH` slot or `PUT` with variant only
-- [ ] Visual badge on slot showing variant
-- [ ] API: validate variant enum
+- [x] Slot detail popover: change variant (`normal` | `reverse` | `holo`)
+- [x] `PATCH` slot or `PUT` with variant only
+- [x] Visual badge on slot showing variant
+- [x] API: validate variant enum
 
 ### 2B — Drag and drop
 
-- [ ] Drag card between slots (same page first; cross-page optional)
-- [ ] API: consider `POST /binders/:id/slots/swap` or two PUTs
-- [ ] Touch-friendly fallback for mobile (long-press → move)
+- [x] Drag card between slots (same page first; cross-page optional)
+- [x] API: consider `POST /binders/:id/slots/swap` or two PUTs
+- [x] Touch-friendly fallback for mobile (long-press → move)
 
 ### 2C — Binder management
 
-- [ ] Duplicate binder (copy all slots) — counts toward plan limit
-- [ ] Edit page count with confirmation if shrinking loses cards
-- [ ] Change layout (only if empty, or with warning)
+- [x] Duplicate binder (copy all slots) — counts toward plan limit
+- [x] Edit page count with confirmation if shrinking loses cards
+- [x] Change layout (only if empty, or with warning)
 
 ### 2D — Responsive / mobile
 
-- [ ] Binder grid usable on phone (smaller cells, scroll)
-- [ ] Page navigator as horizontal scroll strip
-- [ ] Search modal full-screen on mobile
+- [x] Binder grid usable on phone (smaller cells, scroll)
+- [x] Page navigator as horizontal scroll strip
+- [x] Search modal full-screen on mobile
 
 ### 2E — UX polish
 
-- [ ] Empty states (no binders, empty page)
-- [ ] Toast notifications for errors/success
-- [ ] Loading skeletons for grid
-- [ ] Keyboard: Escape closes modal
+- [x] Empty states (no binders, empty page)
+- [x] Toast notifications for errors/success
+- [x] Loading skeletons for grid
+- [x] Keyboard: Escape closes modal
 
 ## API changes (if needed)
 
@@ -65,11 +65,11 @@ Update `docs/API.md` when adding endpoints.
 
 ## Acceptance criteria
 
-- [ ] User can mark a slot as reverse holo and see badge
-- [ ] Drag card from slot A to slot B works
-- [ ] Duplicate binder creates copy with new name
-- [ ] Usable on 375px wide viewport
-- [ ] No regression to MVP flows
+- [x] User can mark a slot as reverse holo and see badge
+- [x] Drag card from slot A to slot B works
+- [x] Duplicate binder creates copy with new name
+- [x] Usable on 375px wide viewport
+- [x] No regression to MVP flows
 
 ## Agent prompt starter
 

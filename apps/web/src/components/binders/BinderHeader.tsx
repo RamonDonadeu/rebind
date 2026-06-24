@@ -6,17 +6,21 @@ import { BinderOptionsMenu } from "@/components/binders/BinderOptionsMenu";
 import { CardSizeControl } from "@/components/binders/CardSizeControl";
 import type { CardSizeLevel } from "@/lib/card-size";
 import type { PageViewMode } from "@/lib/binder-view";
+import type { BinderDetail, BinderLayout } from "@/lib/binders";
 
 type BinderHeaderProps = {
-  name: string;
+  binder: BinderDetail;
   layoutLabel: string;
-  pageCount: number;
+  maxPages: number;
   cardSize: CardSizeLevel;
   onCardSizeChange: (size: CardSizeLevel) => void;
   pageViewMode: PageViewMode;
   onPageViewModeChange: (mode: PageViewMode) => void;
   onRename: (name: string) => Promise<void>;
+  onDuplicate: () => Promise<void>;
+  onSettingsSave: (input: { pageCount: number; layout: BinderLayout }) => Promise<void>;
   onDelete: () => Promise<void>;
+  isMobile?: boolean;
 };
 
 function PencilIcon() {
@@ -38,16 +42,21 @@ function PencilIcon() {
 }
 
 export function BinderHeader({
-  name,
+  binder,
   layoutLabel,
-  pageCount,
+  maxPages,
   cardSize,
   onCardSizeChange,
   pageViewMode,
   onPageViewModeChange,
   onRename,
+  onDuplicate,
+  onSettingsSave,
   onDelete,
+  isMobile = false,
 }: BinderHeaderProps) {
+  const name = binder.name;
+  const pageCount = binder.pageCount;
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(name);
 
@@ -66,11 +75,11 @@ export function BinderHeader({
   }
 
   return (
-    <header className="sticky top-0 z-10 -mt-8 shrink-0 border-b border-zinc-800/80 bg-[var(--background)]/95 pb-4 pt-8 backdrop-blur-sm">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
+    <header className="sticky top-0 z-10 -mt-4 shrink-0 border-b border-zinc-800/80 bg-[var(--background)]/95 pb-3 pt-4 backdrop-blur-sm sm:-mt-8 sm:pb-4 sm:pt-8">
+      <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1 space-y-1">
           <Link href="/binders" className="text-sm text-zinc-500 transition hover:text-zinc-300">
-            ← Back to binders
+            ← Back
           </Link>
 
           {editing ? (
@@ -104,7 +113,9 @@ export function BinderHeader({
             </form>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-100">{name}</h1>
+              <h1 className="truncate text-xl font-bold tracking-tight text-zinc-100 sm:text-2xl">
+                {name}
+              </h1>
               <button
                 type="button"
                 onClick={() => {
@@ -124,13 +135,19 @@ export function BinderHeader({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <CardSizeControl value={cardSize} onChange={onCardSizeChange} />
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+          <div className="hidden sm:block">
+            <CardSizeControl value={cardSize} onChange={onCardSizeChange} />
+          </div>
 
           <BinderOptionsMenu
-            binderName={name}
+            binder={binder}
+            maxPages={maxPages}
             pageViewMode={pageViewMode}
+            showPageViewToggle={!isMobile}
             onPageViewModeChange={onPageViewModeChange}
+            onDuplicate={onDuplicate}
+            onSettingsSave={onSettingsSave}
             onDelete={onDelete}
           />
         </div>

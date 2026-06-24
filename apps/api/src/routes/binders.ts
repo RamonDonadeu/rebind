@@ -7,11 +7,13 @@ import {
   clearSlot,
   createBinder,
   deleteBinder,
+  duplicateBinder,
   getBinder,
   listBinders,
   placeCard,
+  swapSlots,
   updateBinder,
-  updateSlotOwned,
+  updateSlot,
   validatePageCountForUser,
 } from "../services/binder.service.js";
 
@@ -42,8 +44,28 @@ const placeCardSchema = z.object({
   owned: z.boolean().optional(),
 });
 
-const patchSlotSchema = z.object({
-  owned: z.boolean(),
+const patchSlotSchema = z
+  .object({
+    owned: z.boolean().optional(),
+    variant: cardVariantSchema.optional(),
+  })
+  .refine((data) => data.owned !== undefined || data.variant !== undefined, {
+    message: "At least one field is required",
+  });
+
+const slotCoordinateSchema = z.object({
+  page: z.number().int().min(0),
+  row: z.number().int().min(0),
+  col: z.number().int().min(0),
+});
+
+const swapSlotsSchema = z.object({
+  source: slotCoordinateSchema,
+  target: slotCoordinateSchema,
+});
+
+const duplicateBinderSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
 });
 
 function validationError(reply: FastifyReply, message: string) {
@@ -135,6 +157,66 @@ export default async function binderRoutes(app: FastifyInstance) {
     return reply.status(204).send();
   });
 
+  app.post("/binders/:id/duplicate", async (request, reply) => {
+    const user = getAuthUser(request);
+    const { id } = request.params as { id: string };
+    const parsed = duplicateBinderSchema.safeParse(request.body ?? {});
+
+    if (!parsed.success) {
+      return validationError(reply, parsed.error.issues[0]?.message ?? "Invalid request body");
+    }
+
+    try {
+      const binder = await duplicateBinder(user, id, parsed.data.name);
+      request.log.info(
+        { event: "binder.duplicated", sourceBinderId: id, binderId: binder.id, userId: user.id },
+        "binder duplicated"
+      );
+      return reply.status(201).send(binder);
+    } catch (err) {
+      const error = err as { code?: string };
+      if (error.code === API_ERROR_CODES.BINDER_LIMIT_REACHED) {
+        request.log.warn({ event: "binder.limit_reached", userId: user.id }, "binder limit reached");
+      }
+      throw err;
+    }
+  });
+
+  app.post("/binders/:id/slots/swap", async (request, reply) => {
+    const user = getAuthUser(request);
+    const { id } = request.params as { id: string };
+    const parsed = swapSlotsSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return validationError(reply, parsed.error.issues[0]?.message ?? "Invalid request body");
+    }
+
+    const result = await swapSlots(
+      user.id,
+      id,
+      {
+        pageIndex: parsed.data.source.page,
+        row: parsed.data.source.row,
+        col: parsed.data.source.col,
+      },
+      {
+        pageIndex: parsed.data.target.page,
+        row: parsed.data.target.row,
+        col: parsed.data.target.col,
+      }
+    );
+    request.log.info(
+      {
+        event: "slots.swapped",
+        binderId: id,
+        source: parsed.data.source,
+        target: parsed.data.target,
+      },
+      "slots swapped"
+    );
+    return reply.send(result);
+  });
+
   app.put("/binders/:id/pages/:page/slots/:row/:col", async (request, reply) => {
     const user = getAuthUser(request);
     const { id, page, row, col } = request.params as {
@@ -186,24 +268,18 @@ export default async function binderRoutes(app: FastifyInstance) {
     const rowIndex = parseSlotCoordinate(row, "row");
     const colIndex = parseSlotCoordinate(col, "col");
 
-    const slot = await updateSlotOwned(
-      user.id,
-      id,
-      pageIndex,
-      rowIndex,
-      colIndex,
-      parsed.data.owned
-    );
+    const slot = await updateSlot(user.id, id, pageIndex, rowIndex, colIndex, parsed.data);
     request.log.info(
       {
-        event: "slot.ownership_updated",
+        event: "slot.updated",
         binderId: id,
         pageIndex,
         row: rowIndex,
         col: colIndex,
         owned: parsed.data.owned,
+        variant: parsed.data.variant,
       },
-      "slot ownership updated"
+      "slot updated"
     );
     return reply.send(slot);
   });

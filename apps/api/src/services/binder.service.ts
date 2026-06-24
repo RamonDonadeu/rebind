@@ -278,15 +278,19 @@ export async function placeCard(
   return toSlot(updated);
 }
 
-export async function updateSlotOwned(
-  userId: string,
+type SlotCoordinates = {
+  pageIndex: number;
+  row: number;
+  col: number;
+};
+
+async function requireSlot(
   binderId: string,
-  pageIndex: number,
-  row: number,
-  col: number,
-  owned: boolean
-) {
+  userId: string,
+  coordinates: SlotCoordinates
+): Promise<{ binder: Binder; slot: BinderSlot }> {
   const binder = await requireOwnedBinder(binderId, userId);
+  const { pageIndex, row, col } = coordinates;
 
   if (!isValidSlotPosition(binder.layout, pageIndex, row, col, binder.pageCount)) {
     throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
@@ -307,16 +311,50 @@ export async function updateSlotOwned(
     throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
   }
 
+  return { binder, slot };
+}
+
+export async function updateSlot(
+  userId: string,
+  binderId: string,
+  pageIndex: number,
+  row: number,
+  col: number,
+  input: { owned?: boolean; variant?: CardVariant }
+) {
+  const { slot } = await requireSlot(binderId, userId, { pageIndex, row, col });
+
   if (!slot.cardExternalId) {
-    throw appError(400, API_ERROR_CODES.VALIDATION_ERROR, "Cannot set ownership on an empty slot");
+    throw appError(400, API_ERROR_CODES.VALIDATION_ERROR, "Cannot update an empty slot");
+  }
+
+  const data: { owned?: boolean; variant?: CardVariant } = {};
+
+  if (input.owned !== undefined) {
+    data.owned = input.owned;
+  }
+
+  if (input.variant !== undefined) {
+    data.variant = input.variant;
   }
 
   const updated = await prisma.binderSlot.update({
     where: { id: slot.id },
-    data: { owned },
+    data,
   });
 
   return toSlot(updated);
+}
+
+export async function updateSlotOwned(
+  userId: string,
+  binderId: string,
+  pageIndex: number,
+  row: number,
+  col: number,
+  owned: boolean
+) {
+  return updateSlot(userId, binderId, pageIndex, row, col, { owned });
 }
 
 export async function clearSlot(
@@ -326,26 +364,7 @@ export async function clearSlot(
   row: number,
   col: number
 ) {
-  const binder = await requireOwnedBinder(binderId, userId);
-
-  if (!isValidSlotPosition(binder.layout, pageIndex, row, col, binder.pageCount)) {
-    throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
-  }
-
-  const slot = await prisma.binderSlot.findUnique({
-    where: {
-      binderId_pageIndex_row_col: {
-        binderId,
-        pageIndex,
-        row,
-        col,
-      },
-    },
-  });
-
-  if (!slot) {
-    throw appError(404, API_ERROR_CODES.NOT_FOUND, "Slot not found");
-  }
+  const { slot } = await requireSlot(binderId, userId, { pageIndex, row, col });
 
   const updated = await prisma.binderSlot.update({
     where: { id: slot.id },
@@ -359,6 +378,109 @@ export async function clearSlot(
   });
 
   return toSlot(updated);
+}
+
+const EMPTY_SLOT_DATA = {
+  cardExternalId: null,
+  cardName: null,
+  imageUrl: null,
+  variant: "normal" as CardVariant,
+  owned: true,
+};
+
+function cardDataFromSlot(slot: BinderSlot) {
+  return {
+    cardExternalId: slot.cardExternalId,
+    cardName: slot.cardName,
+    imageUrl: slot.imageUrl,
+    variant: slot.variant,
+    owned: slot.owned,
+  };
+}
+
+export async function swapSlots(
+  userId: string,
+  binderId: string,
+  source: SlotCoordinates,
+  target: SlotCoordinates
+) {
+  if (
+    source.pageIndex === target.pageIndex &&
+    source.row === target.row &&
+    source.col === target.col
+  ) {
+    throw appError(400, API_ERROR_CODES.VALIDATION_ERROR, "Source and target slots must differ");
+  }
+
+  const { slot: sourceSlot } = await requireSlot(binderId, userId, source);
+  const { slot: targetSlot } = await requireSlot(binderId, userId, target);
+
+  if (!sourceSlot.cardExternalId) {
+    throw appError(400, API_ERROR_CODES.VALIDATION_ERROR, "Source slot is empty");
+  }
+
+  const sourceData = cardDataFromSlot(sourceSlot);
+  const targetData = cardDataFromSlot(targetSlot);
+
+  const [updatedSource, updatedTarget] = await prisma.$transaction([
+    prisma.binderSlot.update({
+      where: { id: sourceSlot.id },
+      data: targetData.cardExternalId ? targetData : EMPTY_SLOT_DATA,
+    }),
+    prisma.binderSlot.update({
+      where: { id: targetSlot.id },
+      data: sourceData,
+    }),
+  ]);
+
+  return {
+    source: toSlot(updatedSource),
+    target: toSlot(updatedTarget),
+  };
+}
+
+export async function duplicateBinder(
+  user: Pick<User, "id" | "planTier" | "subscriptionStatus">,
+  binderId: string,
+  name?: string
+) {
+  await assertBinderLimit(user);
+
+  const source = await requireOwnedBinderWithSlots(binderId, user.id);
+  const copyName = name?.trim() || `Copy of ${source.name}`;
+
+  const binder = await prisma.$transaction(async (tx) => {
+    const created = await tx.binder.create({
+      data: {
+        userId: user.id,
+        name: copyName,
+        pageCount: source.pageCount,
+        layout: source.layout,
+      },
+    });
+
+    if (source.slots.length > 0) {
+      await tx.binderSlot.createMany({
+        data: source.slots.map((slot) => ({
+          binderId: created.id,
+          pageIndex: slot.pageIndex,
+          row: slot.row,
+          col: slot.col,
+          cardExternalId: slot.cardExternalId,
+          cardName: slot.cardName,
+          imageUrl: slot.imageUrl,
+          variant: slot.variant,
+          owned: slot.owned,
+        })),
+      });
+    } else {
+      await createSlotsForBinder(tx, created.id, source.pageCount, source.layout);
+    }
+
+    return created;
+  });
+
+  return getBinder(user.id, binder.id);
 }
 
 export function validatePageCountForUser(

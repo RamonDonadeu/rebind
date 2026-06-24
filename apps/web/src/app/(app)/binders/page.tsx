@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BinderCard } from "@/components/binders/BinderCard";
 import { CreateBinderDialog } from "@/components/binders/CreateBinderDialog";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/contexts/toast-context";
 import { apiClient, ApiClientError } from "@/lib/api-client";
 import type { BinderDetail, BinderLayout, BinderSummary } from "@/lib/binders";
 import { maxPagesForLimits } from "@/lib/binders";
@@ -13,6 +14,7 @@ import { PLANS } from "@rebind/shared";
 export default function BindersPage() {
   const router = useRouter();
   const { user, refreshUser } = useAuth();
+  const { showToast } = useToast();
   const [binders, setBinders] = useState<BinderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export default function BindersPage() {
     const created = await apiClient.post<BinderDetail>("/binders", input);
     await refreshUser();
     await loadBinders();
+    showToast("Binder created");
     router.push(`/binders/${created.id}`);
   }
 

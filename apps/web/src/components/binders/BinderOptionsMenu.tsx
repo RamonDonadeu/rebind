@@ -2,13 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DeleteBinderDialog } from "@/components/binders/DeleteBinderDialog";
+import { EditBinderSettingsDialog } from "@/components/binders/EditBinderSettingsDialog";
 import { PageViewModeControl } from "@/components/binders/PageViewModeControl";
+import type { BinderDetail, BinderLayout } from "@/lib/binders";
+import { binderHasCards } from "@/lib/binders";
 import type { PageViewMode } from "@/lib/binder-view";
 
 type BinderOptionsMenuProps = {
-  binderName: string;
+  binder: BinderDetail;
+  maxPages: number;
   pageViewMode: PageViewMode;
+  showPageViewToggle?: boolean;
   onPageViewModeChange: (mode: PageViewMode) => void;
+  onDuplicate: () => Promise<void>;
+  onSettingsSave: (input: { pageCount: number; layout: BinderLayout }) => Promise<void>;
   onDelete: () => Promise<void>;
 };
 
@@ -31,14 +38,22 @@ function GearIcon() {
 }
 
 export function BinderOptionsMenu({
-  binderName,
+  binder,
+  maxPages,
   pageViewMode,
+  showPageViewToggle = true,
   onPageViewModeChange,
+  onDuplicate,
+  onSettingsSave,
   onDelete,
 }: BinderOptionsMenuProps) {
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const hasCards = binderHasCards(binder);
 
   useEffect(() => {
     if (!open) {
@@ -66,6 +81,17 @@ export function BinderOptionsMenu({
     };
   }, [open]);
 
+  async function handleDuplicate() {
+    setOpen(false);
+    setDuplicating(true);
+
+    try {
+      await onDuplicate();
+    } finally {
+      setDuplicating(false);
+    }
+  }
+
   return (
     <>
       <div ref={menuRef} className="relative">
@@ -89,14 +115,38 @@ export function BinderOptionsMenu({
               Binder options
             </p>
 
-            <PageViewModeControl
-              value={pageViewMode}
-              onChange={(mode) => {
-                onPageViewModeChange(mode);
-              }}
-            />
+            {showPageViewToggle && (
+              <PageViewModeControl
+                value={pageViewMode}
+                onChange={(mode) => {
+                  onPageViewModeChange(mode);
+                }}
+              />
+            )}
 
-            <div className="mt-3 border-t border-zinc-800 pt-3">
+            <div
+              className={`space-y-1 ${showPageViewToggle ? "mt-3 border-t border-zinc-800 pt-3" : ""}`}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                disabled={duplicating}
+                onClick={() => void handleDuplicate()}
+                className="w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-60"
+              >
+                {duplicating ? "Duplicating…" : "Duplicate binder"}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  setSettingsOpen(true);
+                }}
+                className="w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 transition hover:bg-zinc-800"
+              >
+                Pages & layout
+              </button>
               <button
                 type="button"
                 role="menuitem"
@@ -113,9 +163,18 @@ export function BinderOptionsMenu({
         )}
       </div>
 
+      <EditBinderSettingsDialog
+        open={settingsOpen}
+        binder={binder}
+        maxPages={maxPages}
+        hasCards={hasCards}
+        onClose={() => setSettingsOpen(false)}
+        onSave={onSettingsSave}
+      />
+
       <DeleteBinderDialog
         open={deleteOpen}
-        binderName={binderName}
+        binderName={binder.name}
         onClose={() => setDeleteOpen(false)}
         onConfirm={onDelete}
       />

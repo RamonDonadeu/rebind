@@ -76,6 +76,15 @@ export function hasActiveFilters(filters: CardSearchFilters): boolean {
   );
 }
 
+export function hasAdvancedFilters(filters: CardSearchFilters): boolean {
+  return (
+    filters.setId.length > 0 ||
+    filters.rarity.length > 0 ||
+    filters.sort !== DEFAULT_CARD_SEARCH_FILTERS.sort ||
+    filters.order !== DEFAULT_CARD_SEARCH_FILTERS.order
+  );
+}
+
 export function buildSearchParams(filters: CardSearchFilters): string {
   const params = new URLSearchParams();
 

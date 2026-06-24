@@ -1,4 +1,4 @@
-import { LAYOUT_SLOTS, PLANS, type BinderLayout } from "@rebind/shared";
+import { LAYOUT_SLOTS, PLANS, type BinderLayout, type CardVariant } from "@rebind/shared";
 
 export type { BinderLayout };
 
@@ -19,7 +19,7 @@ export type BinderSlot = {
   cardExternalId: string | null;
   cardName: string | null;
   imageUrl: string | null;
-  variant: string;
+  variant: CardVariant;
   owned: boolean;
 };
 
@@ -44,6 +44,20 @@ export function maxPagesForLimits(maxBinders: number): number {
     return PLANS.collector.maxPagesPerBinder;
   }
   return PLANS.free.maxPagesPerBinder;
+}
+
+export function binderHasCards(binder: BinderDetail): boolean {
+  return binder.slots.some((slot) => slot.cardExternalId !== null);
+}
+
+export function countCardsOnRemovedPages(binder: BinderDetail, newPageCount: number): number {
+  if (newPageCount >= binder.pageCount) {
+    return 0;
+  }
+
+  return binder.slots.filter(
+    (slot) => slot.pageIndex >= newPageCount && slot.cardExternalId !== null
+  ).length;
 }
 
 export function slotsForPage(binder: BinderDetail, pageIndex: number): BinderSlot[] {
