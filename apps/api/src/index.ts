@@ -1,10 +1,13 @@
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import cookie from "@fastify/cookie";
 import { prisma } from "@rebind/db";
 import { PLANS } from "@rebind/shared";
-import { createLoggerConfig, getServiceName } from "./lib/logger";
-import loggingPlugin from "./plugins/logging";
+import { createLoggerConfig, getServiceName } from "./lib/logger.js";
+import loggingPlugin from "./plugins/logging.js";
+import authPlugin from "./plugins/auth.js";
+import authRoutes from "./routes/auth.js";
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = "0.0.0.0";
@@ -22,10 +25,15 @@ const app = Fastify({
 
 await app.register(loggingPlugin);
 
+await app.register(cookie);
+
 await app.register(cors, {
   origin: process.env.CORS_ORIGIN ?? "http://localhost:3000",
   credentials: true,
 });
+
+await app.register(authPlugin);
+await app.register(authRoutes);
 
 app.get("/health", async (request) => {
   let db: "ok" | "error" = "ok";

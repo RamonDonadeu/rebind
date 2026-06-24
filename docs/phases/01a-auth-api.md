@@ -1,6 +1,6 @@
 # Phase 1A — Auth API
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Layer:** `apps/api`  
 **Depends on:** [Phase 0](00-foundation.md)  
 **Blocks:** 1B, 1C, 1D
@@ -35,13 +35,13 @@ Users can register, log in, refresh tokens, and access protected routes. All bin
 
 ### Implementation
 
-- [ ] `apps/api/src/routes/auth.ts` — route handlers
-- [ ] `apps/api/src/lib/password.ts` — bcrypt hash/compare
-- [ ] `apps/api/src/lib/jwt.ts` — sign/verify access + refresh tokens
-- [ ] `apps/api/src/plugins/auth.ts` — `authenticate` decorator / preHandler
-- [ ] Zod schemas for register/login bodies
-- [ ] Register routes in `apps/api/src/index.ts`
-- [ ] Store refresh tokens (choose one):
+- [x] `apps/api/src/routes/auth.ts` — route handlers
+- [x] `apps/api/src/lib/password.ts` — bcrypt hash/compare
+- [x] `apps/api/src/lib/jwt.ts` — sign/verify access + refresh tokens
+- [x] `apps/api/src/plugins/auth.ts` — `authenticate` decorator / preHandler
+- [x] Zod schemas for register/login bodies
+- [x] Register routes in `apps/api/src/index.ts`
+- [x] Store refresh tokens (choose one):
   - **Option A (simpler):** httpOnly cookie + DB table `refresh_tokens`
   - **Option B:** Return refresh token in JSON body (less secure, ok for MVP)
 
@@ -106,14 +106,14 @@ model RefreshToken {
 
 ## Acceptance criteria
 
-- [ ] Register creates user with `planTier: free`, never returns `passwordHash`
-- [ ] Duplicate email → `400` with clear error
-- [ ] Login with wrong password → `401`
-- [ ] Protected route without token → `401`
-- [ ] Valid access token → request proceeds, `request.user` populated
-- [ ] Expired access + valid refresh → new access token
-- [ ] All auth events logged with `event` field (`auth.register`, `auth.login_failed`, etc.)
-- [ ] Passwords never appear in logs (redaction already configured)
+- [x] Register creates user with `planTier: free`, never returns `passwordHash`
+- [x] Duplicate email → `400` with clear error
+- [x] Login with wrong password → `401`
+- [x] Protected route without token → `401`
+- [x] Valid access token → request proceeds, `request.user` populated
+- [x] Expired access + valid refresh → new access token
+- [x] All auth events logged with `event` field (`auth.register`, `auth.login_failed`, etc.)
+- [x] Passwords never appear in logs (redaction already configured)
 
 ## Handoff notes
 

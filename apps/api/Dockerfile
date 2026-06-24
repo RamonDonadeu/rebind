@@ -15,7 +15,7 @@ RUN npm install
 # --- Development ---
 FROM deps AS development
 COPY . .
-RUN npm run db:generate -w @rebind/db
+RUN npm run generate -w @rebind/db
 WORKDIR /app/apps/api
 EXPOSE 4000
 CMD ["npm", "run", "dev"]
@@ -23,7 +23,7 @@ CMD ["npm", "run", "dev"]
 # --- Build ---
 FROM deps AS build
 COPY . .
-RUN npm run db:generate -w @rebind/db
+RUN npm run generate -w @rebind/db
 RUN npm run build -w @rebind/api
 
 # --- Production ---

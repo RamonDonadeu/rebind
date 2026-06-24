@@ -88,7 +88,8 @@ These can run in parallel after prerequisites are met:
 | Phase | Status |
 |-------|--------|
 | 0 | 🟡 Mostly done — migrations verify pending |
-| 1A–1E | ⬜ Not started |
+| 1A | ✅ Complete |
+| 1B–1E | ⬜ Not started |
 | 2–5 | ⬜ Not started |
 
 _Update this table when completing a phase._
