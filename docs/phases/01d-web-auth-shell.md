@@ -1,6 +1,6 @@
 # Phase 1D — Web Auth Shell
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Layer:** `apps/web`  
 **Depends on:** [Phase 1A](01a-auth-api.md)  
 **Blocks:** Phase 1E
@@ -34,15 +34,15 @@ Web app with login/register pages, auth state management, protected routes, and 
 
 ### Implementation
 
-- [ ] `apps/web/src/lib/api-client.ts` — fetch wrapper with auth header + refresh logic
-- [ ] `apps/web/src/lib/auth.ts` — token storage (memory + localStorage or cookie strategy matching API)
-- [ ] `apps/web/src/contexts/auth-context.tsx` or hook `useAuth()`
-- [ ] `apps/web/src/components/layout/app-shell.tsx` — header, nav, logout
-- [ ] `apps/web/src/app/(auth)/login/page.tsx`
-- [ ] `apps/web/src/app/(auth)/register/page.tsx`
-- [ ] `apps/web/src/app/(app)/layout.tsx` — protected layout wrapper
-- [ ] `apps/web/src/app/(app)/binders/page.tsx` — placeholder
-- [ ] Middleware or layout guard redirecting unauthenticated users to `/login`
+- [x] `apps/web/src/lib/api-client.ts` — fetch wrapper with auth header + refresh logic
+- [x] `apps/web/src/lib/auth.ts` — token storage (memory + localStorage or cookie strategy matching API)
+- [x] `apps/web/src/contexts/auth-context.tsx` or hook `useAuth()`
+- [x] `apps/web/src/components/layout/app-shell.tsx` — header, nav, logout
+- [x] `apps/web/src/app/(auth)/login/page.tsx`
+- [x] `apps/web/src/app/(auth)/register/page.tsx`
+- [x] `apps/web/src/app/(app)/layout.tsx` — protected layout wrapper
+- [x] `apps/web/src/app/(app)/binders/page.tsx` — placeholder
+- [x] Middleware or layout guard redirecting unauthenticated users to `/login`
 
 ### API client behavior
 
@@ -64,12 +64,12 @@ Web app with login/register pages, auth state management, protected routes, and 
 
 ## Acceptance criteria
 
-- [ ] User can register and land on `/binders`
-- [ ] User can log out and get redirected to `/login`
-- [ ] `/binders` without token redirects to `/login`
-- [ ] Page refresh keeps user logged in (refresh token flow works)
-- [ ] Header shows user email and plan tier from `/auth/me`
-- [ ] No direct TCGdex calls from browser
+- [x] User can register and land on `/binders`
+- [x] User can log out and get redirected to `/login`
+- [x] `/binders` without token redirects to `/login`
+- [x] Page refresh keeps user logged in (refresh token flow works)
+- [x] Header shows user email and plan tier from `/auth/me`
+- [x] No direct TCGdex calls from browser
 
 ## Handoff to Phase 1E
 

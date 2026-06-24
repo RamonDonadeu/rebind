@@ -6,6 +6,6 @@ export {
   maxBindersForPlan,
   maxPagesForPlan,
   slotsPerPage,
-} from "./plans.js";
+} from "./plans";
 
-export type { BinderLayout, CardVariant, PlanTier } from "./plans.js";
+export type { BinderLayout, CardVariant, PlanTier } from "./plans";

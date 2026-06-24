@@ -91,7 +91,8 @@ These can run in parallel after prerequisites are met:
 | 1A | ✅ Complete |
 | 1B | ✅ Complete |
 | 1C | ✅ Complete |
-| 1D–1E | ⬜ Not started |
+| 1D | ✅ Complete |
+| 1E | ⬜ Not started |
 | 2–5 | ⬜ Not started |
 
 _Update this table when completing a phase._
