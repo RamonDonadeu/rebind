@@ -45,6 +45,7 @@ services:
       LOG_SERVICE_NAME: ${LOG_SERVICE_NAME:-rebind-api}
       LOG_PRETTY: ${LOG_PRETTY:-false}
       DEV_FULL_PLAN: ${DEV_FULL_PLAN:-true}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
     logging:
       driver: json-file
       options:
@@ -57,7 +58,7 @@ services:
     ports:
       - "${API_PORT:-4000}:4000"
     volumes:
-      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api:/app/apps/api
       - ./packages:/app/packages
     depends_on:
       postgres:
@@ -76,10 +77,15 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
       API_INTERNAL_URL: http://api:4000
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
     ports:
       - "${WEB_PORT:-3000}:3000"
     volumes:
       - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/next.config.ts:/app/apps/web/next.config.ts
+      - ./apps/web/tailwind.config.ts:/app/apps/web/tailwind.config.ts
+      - ./apps/web/postcss.config.mjs:/app/apps/web/postcss.config.mjs
       - ./packages/shared:/app/packages/shared
     depends_on:
       - api

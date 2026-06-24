@@ -95,7 +95,21 @@ docker compose up -d
 
 Grafana UI: http://localhost:3001 — see [LOGGING.md](LOGGING.md).
 
+## Hot reload
+
+`docker-compose.yml` runs the API with `tsx watch` and the web app with `next dev`, with source folders bind-mounted into the containers.
+
+On **Windows** (and some Mac setups), the VM does not receive native file-change events from bind mounts. Compose sets `CHOKIDAR_USEPOLLING` and `WATCHPACK_POLLING` to `true` by default so saves on the host trigger reloads without `docker compose restart`.
+
+After editing `package.json` or installing dependencies, rebuild:
+
+```bash
+docker compose up --build api web
+```
+
 ## Troubleshooting
+
+**Changes not reflected:** Ensure polling is enabled (`CHOKIDAR_USEPOLLING=true`, `WATCHPACK_POLLING=true` in `.env` or compose defaults). Recreate containers after compose changes: `docker compose up -d --force-recreate api web`.
 
 **Port already in use:** Change `WEB_PORT` or `API_PORT` in `.env`.
 
