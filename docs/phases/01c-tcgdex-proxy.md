@@ -1,6 +1,6 @@
 # Phase 1C — TCGdex Proxy
 
-**Status:** ⬜ Not started  
+**Status:** ✅ Complete  
 **Layer:** `apps/api`  
 **Depends on:** [Phase 1A](01a-auth-api.md)  
 **Blocks:** Phase 1E
@@ -42,11 +42,11 @@ Authenticated card search and detail via TCGdex, proxied and cached through the 
 
 ### Implementation
 
-- [ ] `apps/api/src/routes/cards.ts`
-- [ ] `apps/api/src/services/tcgdex.service.ts` — HTTP client for TCGdex
-- [ ] `apps/api/src/services/cache.service.ts` — Redis get/set with TTL
-- [ ] `apps/api/src/lib/tcgdex.types.ts` — normalize TCGdex response shapes
-- [ ] Connect Redis client on API startup (graceful if Redis down — log warning, skip cache)
+- [x] `apps/api/src/routes/cards.ts`
+- [x] `apps/api/src/services/tcgdex.service.ts` — HTTP client for TCGdex
+- [x] `apps/api/src/services/cache.service.ts` — Redis get/set with TTL
+- [x] `apps/api/src/lib/tcgdex.types.ts` — normalize TCGdex response shapes
+- [x] Connect Redis client on API startup (graceful if Redis down — log warning, skip cache)
 
 ### TCGdex endpoints
 
@@ -100,12 +100,12 @@ Include `pricing` object if present — **display only**, do not persist (Phase 
 
 ## Acceptance criteria
 
-- [ ] Search "pikachu" returns card list with images
-- [ ] Second identical search served from Redis cache (log `tcgdex.cache_hit`)
-- [ ] `GET /cards/:id` returns card detail
-- [ ] Routes require authentication
-- [ ] No TCGdex API key required
-- [ ] TCGdex errors logged with `event: "tcgdex.error"`
+- [x] Search "pikachu" returns card list with images
+- [x] Second identical search served from Redis cache (log `tcgdex.cache_hit`)
+- [x] `GET /cards/:id` returns card detail
+- [x] Routes require authentication
+- [x] No TCGdex API key required
+- [x] TCGdex errors logged with `event: "tcgdex.error"`
 
 ## Handoff to Phase 1E
 

@@ -2,8 +2,8 @@ import type { Binder, BinderLayout, BinderSlot, CardVariant, User } from "@rebin
 import { prisma } from "@rebind/db";
 import {
   API_ERROR_CODES,
-  PLANS,
   maxBindersForPlan,
+  maxPagesForPlan,
   type PlanTier,
 } from "@rebind/shared";
 import { appError } from "../lib/errors.js";
@@ -49,10 +49,7 @@ function toBinderDetail(binder: BinderWithSlots) {
 }
 
 function maxPagesForUser(user: Pick<User, "planTier" | "subscriptionStatus">): number {
-  if (user.planTier === "collector" && user.subscriptionStatus === "active") {
-    return PLANS.collector.maxPagesPerBinder;
-  }
-  return PLANS.free.maxPagesPerBinder;
+  return maxPagesForPlan(user.planTier as PlanTier, user.subscriptionStatus);
 }
 
 async function findOwnedBinder(binderId: string, userId: string): Promise<Binder | null> {

@@ -31,14 +31,36 @@ export function slotsPerPage(layout: BinderLayout): number {
   return rows * cols;
 }
 
+export function isDevFullPlanEnabled(): boolean {
+  return process.env.NODE_ENV !== "production" && process.env.DEV_FULL_PLAN === "true";
+}
+
 export function maxBindersForPlan(
   planTier: PlanTier,
   subscriptionStatus: "none" | "active" | "past_due" | "canceled"
 ): number {
+  if (isDevFullPlanEnabled()) {
+    return PLANS.collector.maxBinders;
+  }
+
   if (planTier === "collector" && subscriptionStatus === "active") {
     return PLANS.collector.maxBinders;
   }
   return PLANS.free.maxBinders;
+}
+
+export function maxPagesForPlan(
+  planTier: PlanTier,
+  subscriptionStatus: "none" | "active" | "past_due" | "canceled"
+): number {
+  if (isDevFullPlanEnabled()) {
+    return PLANS.collector.maxPagesPerBinder;
+  }
+
+  if (planTier === "collector" && subscriptionStatus === "active") {
+    return PLANS.collector.maxPagesPerBinder;
+  }
+  return PLANS.free.maxPagesPerBinder;
 }
 
 export const API_ERROR_CODES = {
@@ -46,4 +68,6 @@ export const API_ERROR_CODES = {
   UNAUTHORIZED: "UNAUTHORIZED",
   NOT_FOUND: "NOT_FOUND",
   VALIDATION_ERROR: "VALIDATION_ERROR",
+  TCGDEX_UNAVAILABLE: "TCGDEX_UNAVAILABLE",
+  RATE_LIMITED: "RATE_LIMITED",
 } as const;

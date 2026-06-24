@@ -30,6 +30,8 @@ docker compose up --build
 
 See [docs/DOCKER.md](docs/DOCKER.md) for details.
 
+**Dev tip:** `.env.example` sets `DEV_FULL_PLAN=true` so local users get collector limits (50 binders, 48 pages per binder) without Stripe. Set to `false` to test the free tier. Restart the API after changing it.
+
 ## Documentation
 
 | Doc | Description |

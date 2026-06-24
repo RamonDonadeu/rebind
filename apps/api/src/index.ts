@@ -9,6 +9,8 @@ import loggingPlugin from "./plugins/logging.js";
 import authPlugin from "./plugins/auth.js";
 import authRoutes from "./routes/auth.js";
 import binderRoutes from "./routes/binders.js";
+import cardRoutes from "./routes/cards.js";
+import { connectRedis } from "./services/cache.service.js";
 
 const port = Number(process.env.API_PORT ?? 4000);
 const host = "0.0.0.0";
@@ -36,6 +38,9 @@ await app.register(cors, {
 await app.register(authPlugin);
 await app.register(authRoutes);
 await app.register(binderRoutes);
+await app.register(cardRoutes);
+
+await connectRedis(app.log);
 
 app.get("/health", async (request) => {
   let db: "ok" | "error" = "ok";

@@ -44,6 +44,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-debug}
       LOG_SERVICE_NAME: ${LOG_SERVICE_NAME:-rebind-api}
       LOG_PRETTY: ${LOG_PRETTY:-false}
+      DEV_FULL_PLAN: ${DEV_FULL_PLAN:-true}
     logging:
       driver: json-file
       options:

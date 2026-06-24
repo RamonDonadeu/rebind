@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { Prisma, type User } from "@rebind/db";
 import { prisma } from "@rebind/db";
-import { API_ERROR_CODES, maxBindersForPlan, type PlanTier } from "@rebind/shared";
+import { API_ERROR_CODES, isDevFullPlanEnabled, maxBindersForPlan, type PlanTier } from "@rebind/shared";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import {
   hashToken,
@@ -87,6 +87,9 @@ export default async function authRoutes(app: FastifyInstance) {
         data: {
           email: normalizedEmail,
           passwordHash,
+          ...(isDevFullPlanEnabled()
+            ? { planTier: "collector" as const, subscriptionStatus: "active" as const }
+            : {}),
         },
       });
 
